@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나만의 학습 포털 & 랭킹</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<!-- Firebase: Google 로그인 + 공유 데이터베이스 -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9; --surface3:#e2e8f0;
+    --line:#e2e8f0; --line2:#f1f5f9;
+    --t1:#1e293b; --t2:#334155; --t3:#475569; --t4:#64748b; --t5:#94a3b8;
+    --ti-bg:#eef2ff; --ti-fg:#4f46e5; --ti-fg2:#4338ca; --ti-line:#c7d2fe;
+    --te-bg:#ecfdf5; --tv-bg:#f5f3ff; --tv-fg:#7c3aed;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#0f141c; --surface:#18202b; --surface2:#222c3a; --surface3:#2c3748;
+      --line:#2b3748; --line2:#222c3a;
+      --t1:#eef1f5; --t2:#dbe2ec; --t3:#b4bfce; --t4:#93a0b3; --t5:#7b889b;
+      --ti-bg:#252a52; --ti-fg:#a5b4fc; --ti-fg2:#c7d2fe; --ti-line:#3b4390;
+      --te-bg:#14352c; --tv-bg:#2a2352; --tv-fg:#c4b5fd;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0f141c; --surface:#18202b; --surface2:#222c3a; --surface3:#2c3748;
+    --line:#2b3748; --line2:#222c3a;
+    --t1:#eef1f5; --t2:#dbe2ec; --t3:#b4bfce; --t4:#93a0b3; --t5:#7b889b;
+    --ti-bg:#252a52; --ti-fg:#a5b4fc; --ti-fg2:#c7d2fe; --ti-line:#3b4390;
+    --te-bg:#14352c; --tv-bg:#2a2352; --tv-fg:#c4b5fd;
+    color-scheme: dark;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { font-family: 'Noto Sans KR','Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif; background: var(--bg); color: var(--t1); }
+
+  /* Tailwind 색상 클래스를 테마 변수로 연결 */
+  :root .bg-slate-50 { background-color: var(--bg); }
+  :root .bg-white { background-color: var(--surface); }
+  :root .bg-slate-100 { background-color: var(--surface2); }
+  :root .bg-slate-200 { background-color: var(--surface3); }
+  :root .hover\:bg-slate-200:hover { background-color: var(--surface3); }
+  :root .bg-indigo-50, :root .bg-indigo-50\/70 { background-color: var(--ti-bg); }
+  :root .bg-emerald-50 { background-color: var(--te-bg); }
+  :root .bg-violet-50 { background-color: var(--tv-bg); }
+  :root .text-slate-800 { color: var(--t1); }
+  :root .text-slate-700 { color: var(--t2); }
+  :root .text-slate-600 { color: var(--t3); }
+  :root .text-slate-500 { color: var(--t4); }
+  :root .text-slate-400 { color: var(--t5); }
+  :root .text-indigo-600 { color: var(--ti-fg); }
+  :root .text-indigo-700, :root .text-indigo-900 { color: var(--ti-fg2); }
+  :root .text-violet-600 { color: var(--tv-fg); }
+  :root .border-slate-200 { border-color: var(--line); }
+  :root .border-slate-100 { border-color: var(--line2); }
+  :root .border-indigo-200 { border-color: var(--ti-line); }
+  :root input:not([type=checkbox]), :root select { background-color: var(--surface); color: var(--t1); }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #6366f1; outline-offset: 2px; }
+  .tab-on { background: #4f46e5; color: #fff; }
+  .tab-off { background: var(--surface2); color: var(--t3); }
+  #game-card.game-full { position: fixed; inset: 0; z-index: 45; border-radius: 0; border: 0; overflow-y: auto; background: var(--surface); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #game-card.game-full > summary { position: sticky; top: 0; z-index: 2; background: var(--surface); padding-top: calc(1rem + env(safe-area-inset-top, 0px)); border-bottom: 1px solid var(--line); }
+  #game-card.game-full > div { max-width: 30rem; margin: 0 auto; padding-top: 1rem; }
+  @media (min-width: 1024px) { #game-card.game-full > div { max-width: 38rem; } }
+  #game-card.game-full .game-close { display: inline-block; }
+  #game-card.game-full .game-open { display: none; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+<!-- 프로필 모달 -->
+<div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100">
+    <div class="text-center mb-6">
+      <div class="bg-indigo-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md text-2xl" aria-hidden="true">🧑‍🚀</div>
+      <h2 id="auth-title" class="text-xl font-bold text-slate-800">학습 포털 프로필 설정</h2>
+      <p class="text-xs text-slate-400 mt-1">랭킹에 표시될 닉네임을 입력하세요.</p>
+    </div>
+    <div id="google-login-panel" class="space-y-3">
+      <p id="auth-status" class="text-sm text-slate-500 text-center">학습 포털을 이용하려면 Google 계정으로 로그인하세요.</p>
+      <button type="button" id="google-login-btn" class="w-full flex items-center justify-center gap-3 border border-slate-200 hover:bg-slate-50 text-slate-700 py-3 rounded-xl text-sm font-semibold transition">
+        <span class="text-lg font-bold" aria-hidden="true">G</span> Google 계정으로 로그인
+      </button>
+      <p class="text-[11px] text-slate-400 text-center">처음 로그인하면 계정이 자동으로 생성됩니다.</p>
+    </div>
+    <form id="auth-form" class="hidden space-y-4">
+      <div>
+        <label for="nickname-input" class="block text-xs font-semibold text-slate-500 mb-1">닉네임</label>
+        <input type="text" id="nickname-input" required maxlength="16" placeholder="예: 열공스터디러"
+               class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm">
+      </div>
+      <div class="flex gap-2">
+        <button type="button" id="auth-cancel" class="hidden flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl text-sm font-semibold transition">취소</button>
+        <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition shadow-md">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" role="status" class="hidden fixed left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg" style="bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));"></div>
+
+<header class="bg-white border-b border-slate-200 sticky z-40" style="top: env(safe-area-inset-top, 0px);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="bg-indigo-600 text-white w-10 h-10 rounded-xl shadow-md flex items-center justify-center text-xl shrink-0" aria-hidden="true">🎓</div>
+      <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent truncate">나만의 학습 포털</h1>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      
+      <div id="header-dday" class="hidden items-center gap-1.5 bg-violet-50 text-violet-600 px-3 py-1.5 rounded-full text-xs font-bold max-w-[11rem]">
+        <span aria-hidden="true">📅</span><span id="hd-text" class="whitespace-nowrap"></span><span id="hd-title" class="hidden sm:inline truncate font-medium"></span>
+      </div>
+      <button id="nick-badge" class="hidden items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-semibold max-w-[9rem]" title="닉네임 변경">
+        <span aria-hidden="true">👤</span><span id="display-nickname" class="truncate"></span>
+      </button>
+      <button id="signout-btn" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" title="Google 계정 로그아웃">로그아웃</button>
+      <button id="theme-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" aria-label="화면 테마 변경">🖥️ 자동</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+
+  <div class="contents lg:block lg:col-span-2 lg:space-y-8 min-w-0">
+
+    <div class="order-1 lg:order-none grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="bg-indigo-50 w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2" aria-hidden="true">📋</div>
+        <p class="text-xs font-medium text-slate-400">오늘의 할 일</p>
+        <p id="todo-stats" class="text-lg font-bold text-slate-800">0 / 0</p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="bg-emerald-50 w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2" aria-hidden="true">⏱️</div>
+        <p class="text-xs font-medium text-slate-400">오늘 집중</p>
+        <p id="today-study" class="text-lg font-bold text-slate-800">0분</p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="bg-violet-50 w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2" aria-hidden="true">📚</div>
+        <p class="text-xs font-medium text-slate-400">누적 집중</p>
+        <p id="total-study-time" class="text-lg font-bold text-slate-800">0분</p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="bg-indigo-50 w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2" aria-hidden="true">🔥</div>
+        <p class="text-xs font-medium text-slate-400">연속 학습</p>
+        <p id="streak-stat" class="text-lg font-bold text-slate-800">0일</p>
+      </div>
+    </div>
+
+    <!-- 투두 -->
+    <div class="order-2 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-4 gap-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">🎯</span> 오늘의 학습 목표</h2>
+        <button id="clear-done" class="text-xs text-slate-500 hover:text-red-500 transition font-medium">완료 항목 지우기</button>
+      </div>
+      <form id="todo-form" class="flex flex-wrap sm:flex-nowrap gap-2 mb-4">
+        <input type="text" id="todo-input" aria-label="학습 목표" placeholder="오늘 공부할 내용 (예: 수학 3단원 복습)"
+               class="flex-grow min-w-0 px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+        <select id="todo-category" aria-label="과목" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></select>
+        <input type="text" id="todo-custom" aria-label="과목 직접 입력" maxlength="10" placeholder="과목 직접 입력" class="hidden w-32 px-3 py-2.5 rounded-xl border border-slate-200 text-sm">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">추가</button>
+      </form>
+      <ul id="todo-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></ul>
+    </div>
+
+    <!-- 과목별 통계 -->
+    <div class="order-7 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-4 gap-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">📊</span> 과목별 공부 시간</h2>
+        <select id="stats-range" aria-label="기간" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white">
+          <option value="today">오늘</option><option value="7" selected>최근 7일</option><option value="30">최근 30일</option><option value="all">전체</option>
+        </select>
+      </div>
+      <div id="subject-stats" class="space-y-3"></div>
+    </div>
+
+    <!-- 공부 인증 -->
+    <div class="order-6 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-2"><span aria-hidden="true">📸</span> 공부 인증</h2>
+      <p id="post-note" class="text-xs text-slate-400 mb-3"></p>
+      <div id="post-form" class="hidden mb-4 space-y-2">
+        <div class="flex gap-3 items-center">
+          <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-semibold transition">📷 사진 선택<input id="post-file" type="file" accept="image/*" class="hidden"></label>
+          <img id="post-preview" class="hidden w-12 h-12 rounded-lg object-cover" alt="미리보기">
+        </div>
+        <div class="flex gap-2">
+          <input id="post-caption" type="text" maxlength="60" aria-label="한 줄 코멘트" placeholder="한 줄 코멘트 (선택)" class="flex-grow min-w-0 px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+          <button id="post-submit" class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm whitespace-nowrap">인증 올리기</button>
+        </div>
+      </div>
+      <div class="mb-4 p-4 rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <button id="cal-prev" aria-label="이전 달" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm transition">◀</button>
+          <p id="cal-title" class="text-sm font-bold text-slate-800"></p>
+          <button id="cal-next" aria-label="다음 달" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm transition disabled:opacity-40 disabled:cursor-not-allowed">▶</button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-400 mb-1"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+        <div id="cal-grid" class="grid grid-cols-7 gap-1"></div>
+        <p id="cal-summary" class="text-xs text-slate-500 mt-2"></p>
+        <p id="cal-detail" class="text-xs text-slate-600 mt-1 break-words"></p>
+      </div>
+      <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+    </div>
+
+    <!-- 자료 -->
+    <div class="order-8 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-4 gap-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">🔗</span> 학습 자료 & 링크 <span id="material-count" class="text-sm font-medium text-slate-400"></span></h2>
+        <select id="material-filter" aria-label="과목 필터" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white"></select>
+      </div>
+      <form id="material-form" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+        <input type="text" id="material-title" aria-label="자료 이름" placeholder="자료 이름 (예: 개념원리 강의)"
+               class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm min-w-0">
+        <input type="url" id="material-url" aria-label="웹사이트 주소" placeholder="https://..."
+               class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm min-w-0">
+        <div class="flex gap-2">
+          <select id="material-category" aria-label="과목" class="flex-grow px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"></select>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">저장</button>
+        </div>
+      </form>
+      <input type="text" id="material-custom" form="material-form" aria-label="과목 직접 입력" maxlength="10" placeholder="과목 직접 입력 (예: 한문)" class="hidden w-full mb-4 px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+      <div id="material-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+
+  <div class="contents lg:block lg:space-y-8 min-w-0">
+
+    <!-- 타이머 -->
+    <div class="order-3 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+      <p id="seoul-clock" class="text-xs font-bold text-slate-800 mb-1" aria-label="서울 현재 시각"></p>
+      <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center justify-center gap-2"><span aria-hidden="true">⏲️</span> 열공 타이머</h2>
+      <div class="flex justify-center gap-2 mb-5">
+        <button id="mode-study" class="px-4 py-1.5 rounded-full text-xs font-semibold tab-on transition">집중</button>
+        <button id="mode-break" class="px-4 py-1.5 rounded-full text-xs font-semibold tab-off transition">휴식</button>
+      </div>
+      <div id="timer-display" class="text-5xl font-black text-slate-800 tracking-wider mb-5" role="timer">25:00</div>
+      <p id="overtime-note" class="hidden text-xs font-bold text-indigo-600 -mt-3 mb-4">⏫ 설정 시간을 넘겨 공부 중이에요 (초과 시간도 기록돼요)</p>
+      <div class="flex justify-center gap-3 mb-5">
+        <button id="timer-toggle" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm flex items-center gap-2">
+          <span id="timer-icon" aria-hidden="true">▶</span> <span id="timer-btn-text">시작</span>
+        </button>
+        <button id="timer-reset" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-semibold transition">초기화</button>
+      </div>
+
+      <div id="pending-box" class="hidden mb-5 p-3 rounded-xl bg-indigo-50 text-left">
+        <p class="text-xs text-slate-500 mb-2">저장 대기 중인 집중 시간 <b id="pending-time" class="text-indigo-700 text-sm"></b></p>
+        <div class="flex gap-2 mb-2">
+          <select id="save-subject" aria-label="저장할 과목" class="flex-grow min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white"></select>
+          <input type="text" id="save-custom" aria-label="과목 직접 입력" maxlength="10" placeholder="과목 입력" class="hidden w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm">
+        </div>
+        <button id="save-time" class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-sm font-semibold transition">💾 저장하고 랭킹에 반영</button>
+        <p id="pending-hint" class="text-xs text-slate-400 mt-2"></p>
+      </div>
+
+      <div class="mb-5 text-left">
+        <div class="flex justify-between text-xs text-slate-500 mb-1">
+          <span>오늘 목표</span><span id="goal-text">0 / 120분</span>
+        </div>
+        <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div id="goal-bar" class="h-full bg-indigo-600 rounded-full transition-all" style="width:0%"></div></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 text-left text-xs text-slate-500">
+        <label class="block">집중(분)
+          <input id="set-focus" type="number" min="1" max="120" class="mt-1 w-full px-2 py-1.5 rounded-lg border border-slate-200 text-sm">
+        </label>
+        <label class="block">휴식(분)
+          <input id="set-break" type="number" min="1" max="60" class="mt-1 w-full px-2 py-1.5 rounded-lg border border-slate-200 text-sm">
+        </label>
+        <label class="block">목표(분)
+          <input id="set-goal" type="number" min="10" max="1440" class="mt-1 w-full px-2 py-1.5 rounded-lg border border-slate-200 text-sm">
+        </label>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-slate-500 mt-3 text-left cursor-pointer">
+        <input id="set-sound" type="checkbox" class="w-4 h-4"> 타이머가 끝나면 알림음 재생
+      </label>
+    </div>
+
+    <!-- 랭킹 -->
+    <div class="order-4 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-3 gap-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">🏆</span> 스터디 랭킹</h2>
+        <div class="flex gap-1.5">
+          <button id="rank-today" class="px-3 py-1 rounded-full text-xs font-semibold tab-on transition">오늘</button>
+          <button id="rank-total" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">누적</button>
+          
+        </div>
+      </div>
+      <p id="rank-note" class="text-xs text-slate-400 mb-3 hidden"></p>
+      <div id="leaderboard-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- 연속 학습 랭킹 -->
+    <div class="order-5 lg:order-none bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2"><span aria-hidden="true">🔥</span> 연속 학습 랭킹</h2>
+      <div id="streak-list" class="space-y-1 max-h-40 overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- 쉬는 시간 미니게임 -->
+    <details id="game-card" class="order-9 lg:order-none bg-white rounded-2xl border border-slate-200 shadow-sm">
+      <summary class="cursor-pointer select-none p-4 text-sm font-bold text-slate-800 flex items-center justify-between"><span>🎮 쉬는 시간 미니게임</span><span class="game-open text-xs font-medium text-slate-400">펼치기 ▾</span><span class="game-close hidden text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">✕ 닫기</span></summary>
+      <div class="px-4 pb-4">
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button id="g-tab-react" class="px-3 py-1 rounded-full text-xs font-semibold tab-on transition">반응속도</button>
+          <button id="g-tab-num" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">점프 달리기</button>
+          <button id="g-tab-mine" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">지뢰찾기</button>
+          <button id="g-tab-mine2" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">지뢰찾기(상)</button>
+        </div>
+        <div id="g-react">
+          <button id="react-box" class="w-full h-28 rounded-xl text-sm font-bold transition"></button>
+          <p id="react-msg" class="text-xs text-slate-500 mt-2 text-center"></p>
+        </div>
+        <div id="g-num" class="hidden">
+          <canvas id="run-canvas" class="w-full rounded-xl border border-slate-200 mb-2 select-none" style="aspect-ratio:320/140;touch-action:none" aria-label="점프 달리기 게임 화면"></canvas>
+          <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
+            <span id="num-msg"></span>
+            <button id="num-start" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">시작</button>
+          </div>
+        </div>
+        <div id="g-mine" class="hidden">
+          <div class="flex items-center justify-between gap-2 text-xs text-slate-500 mb-2">
+            <span id="mine-left" class="font-bold">💣 22</span>
+            <span id="mine-time" class="font-bold">⏱ 0초</span>
+            <button id="mine-flag" type="button" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-semibold">🚩 깃발 모드 OFF</button>
+          </div>
+          <div id="mine-grid" class="grid gap-1" style="grid-template-columns:repeat(12,minmax(0,1fr));touch-action:manipulation"></div>
+          <div class="flex items-center justify-between gap-2 text-xs text-slate-500 mt-2">
+            <span id="mine-msg"></span>
+            <button id="mine-start" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">새 게임</button>
+          </div>
+        </div>
+        <div id="game-rank" class="mt-3 pt-3 border-t border-slate-200 space-y-1"></div>
+      </div>
+    </details>
+
+    <!-- 일정 -->
+    <div class="order-10 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4"><span aria-hidden="true">📅</span> 중요 학습 일정</h2>
+      <form id="event-form" class="space-y-2 mb-4">
+        <input type="text" id="event-title" aria-label="일정 내용" placeholder="일정 내용 (예: 수학 중간고사)"
+               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+        <div class="flex gap-2">
+          <input type="date" id="event-date" aria-label="날짜" class="flex-grow min-w-0 px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">등록</button>
+        </div>
+      </form>
+      <ul id="event-list" class="space-y-2.5 max-h-52 overflow-y-auto pr-1"></ul>
+    </div>
+  </div>
+</main>
+
+<div id="lightbox" class="hidden fixed inset-0 z-50 bg-black/80 items-center justify-center p-4 cursor-zoom-out" role="dialog" aria-label="사진 크게 보기">
+  <img id="lightbox-img" alt="공부 인증 사진 크게 보기" class="max-h-full max-w-full rounded-xl">
+</div>
+
+<footer class="bg-white border-t border-slate-200 py-6 mt-auto text-center text-xs text-slate-400">
+  <p>열심히 공부하는 당신을 응원합니다! ✨</p>
+</footer>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const SUBJECTS = ['국어', '영어', '한국사', '기타'];
+
+  // ---------- 저장소 / 유틸 ----------
+  function lsGet(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      if (v === null) return fallback;
+      try { return JSON.parse(v); } catch (e) { return v; }
+    } catch (e) { return fallback; }
+  }
+  const SYNC_KEYS = ['study_todos', 'study_materials', 'study_events', 'study_settings', 'study_days', 'study_subjects', 'study_certdays'];
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+    if (SYNC_KEYS.indexOf(key) >= 0) { try { scheduleCloudSave(); } catch (e) {} }
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function safeUrl(u) { try { const x = new URL(u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : '#'; } catch (e) { return '#'; } }
+  function dayKey(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function fmt(min) {
+    min = Math.floor(min);
+    if (min < 60) return min + '분';
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? `${h}시간 ${m}분` : `${h}시간`;
+  }
+  function fmtSec(sec) {
+    sec = Math.floor(sec);
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h) return `${h}시간 ${m}분 ${s}초`;
+    if (m) return `${m}분 ${s}초`;
+    return `${s}초`;
+  }
+  function effStreak(n, last) {
+    n = Number(n) || 0;
+    if (!n || !last) return 0;
+    const t = new Date(), y = new Date(); y.setDate(y.getDate() - 1);
+    return (last === dayKey(t) || last === dayKey(y)) ? n : 0;
+  }
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.remove('hidden');
+    clearTimeout(toast._h); toast._h = setTimeout(() => t.classList.add('hidden'), 4500);
+  }
+  function fillSubjects(sel, withAll) {
+    sel.innerHTML = (withAll ? '<option value="">전체 과목</option>' : '') + SUBJECTS.map(s => `<option>${s}</option>`).join('');
+  }
+  fillSubjects($('todo-category')); fillSubjects($('material-category')); fillSubjects($('save-subject'));
+  function wireCustom(selId, inputId) {
+    const s = $(selId), i = $(inputId);
+    s.addEventListener('change', () => { i.classList.toggle('hidden', s.value !== '기타'); if (s.value === '기타') i.focus(); });
+  }
+  wireCustom('todo-category', 'todo-custom'); wireCustom('material-category', 'material-custom'); wireCustom('save-subject', 'save-custom');
+  function pickCategory(selId, inputId) {
+    const s = $(selId);
+    if (s.value !== '기타') return s.value;
+    return $(inputId).value.trim().slice(0, 10) || '기타';
+  }
+
+  
+
+  // ---------- 테마 ----------
+  const THEMES = ['auto', 'light', 'dark'];
+  const THEME_LABEL = { auto: '🖥️ 자동', light: '☀️ 라이트', dark: '🌙 다크' };
+  let theme = lsGet('study_theme', 'auto');
+  if (!THEMES.includes(theme)) theme = 'auto';
+  function applyTheme() {
+    if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+    $('theme-btn').textContent = THEME_LABEL[theme];
+  }
+  $('theme-btn').addEventListener('click', () => {
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    lsSet('study_theme', theme); applyTheme();
+  });
+  applyTheme();
+
+  // ---------- 상태 ----------
+  let nick = String(lsGet('study_current_user', '') || '');
+  let todos = lsGet('study_todos', []);
+  let materials = lsGet('study_materials', []);
+  let events = lsGet('study_events', []);
+  if (!Array.isArray(todos)) todos = [];
+  if (!Array.isArray(materials)) materials = [];
+  if (!Array.isArray(events)) events = [];
+
+  let totalSec = lsGet('study_total_sec', null);
+  if (totalSec === null) totalSec = (Number(lsGet('study_total_time', 0)) || 0) * 60;
+  totalSec = Number(totalSec) || 0;
+  let today = lsGet('study_today', null);
+  if (!today || typeof today !== 'object' || today.day !== dayKey()) today = { day: dayKey(), sec: 0 };
+  let days = lsGet('study_days', []);
+  if (!Array.isArray(days)) days = [];
+  let settings = Object.assign({ focus: 25, brk: 5, goal: 120, sound: true }, lsGet('study_settings', {}) || {});
+
+  let pendingSec = Number(lsGet('study_pending', 0)) || 0;
+  let subjectLog = lsGet('study_subjects', {});
+  if (!subjectLog || typeof subjectLog !== 'object' || Array.isArray(subjectLog)) subjectLog = {};
+  let certDays = lsGet('study_certdays', []);
+  if (!Array.isArray(certDays)) certDays = [];
+  function saveTime() { lsSet('study_total_sec', totalSec); lsSet('study_today', today); lsSet('study_days', days.slice(-400)); lsSet('study_pending', pendingSec); }
+  function todayMin() { return today.day === dayKey() ? Math.floor(today.sec / 60) : 0; }
+  function totalMin() { return Math.floor(totalSec / 60); }
+  function addStudy(sec) {
+    if (today.day !== dayKey()) today = { day: dayKey(), sec: 0 };
+    totalSec += sec; today.sec += sec;
+    if (today.sec >= 60 && !days.includes(today.day)) days.push(today.day);
+  }
+  function streak() {
+    const set = new Set(days);
+    const d = new Date();
+    if (!set.has(dayKey(d))) d.setDate(d.getDate() - 1);
+    let n = 0;
+    while (set.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+
+  // ---------- 클라우드 (공유 랭킹) ----------
+  const cloud = { db: null, uid: null, canWrite: true, state: 'loading' };
+  let ranks = [];
+  let rankTab = 'today';
+  let synced = { total: -1, today: -1, totalS: -1, todayS: -1, day: '', nick: '' };
+  let writing = false, dirty = false, lastFail = 0, adopted = false;
+
+  async function syncRank(force) {
+    syncCerts();
+    if (!cloud.db || !cloud.uid || !nick || !cloud.canWrite) return;
+    const total = totalMin(), td = todayMin(), day = dayKey();
+    const totalS = Math.floor(totalSec), todayS = today.day === day ? Math.floor(today.sec) : 0;
+    const stk = streak(), lastD = days.length ? days.slice().sort().pop() : '';
+    if (!force && totalS === synced.totalS && todayS === synced.todayS && stk === synced.stk && day === synced.day && nick === synced.nick) return;
+    if (Date.now() - lastFail < 30000) return;
+    if (writing) { dirty = true; return; }
+    writing = true;
+    try {
+      await cloud.db.doc('ranks/' + cloud.uid).set({ nick: nick, total: total, today: td, totalS: totalS, todayS: todayS, streak: stk, last: lastD, day: day });
+      synced = { total: total, today: td, totalS: totalS, todayS: todayS, stk: stk, day: day, nick: nick };
+    } catch (e) {
+      lastFail = Date.now();
+      if (e && e.code === 'invalid_argument') { cloud.canWrite = false; renderRank(); }
+      else if (e && e.code === 'quota_exceeded') { toast('랭킹 저장 공간이 가득 차서 기록을 올리지 못했어요.'); }
+    }
+    writing = false;
+    if (dirty) { dirty = false; syncRank(); }
+  }
+
+  function adoptFromCloud() {
+    if (adopted || !cloud.uid) return;
+    const mine = ranks.find(r => r.id === cloud.uid);
+    adopted = true;
+    if (!mine) return;
+    if (!nick && mine.nick) {
+      nick = String(mine.nick).slice(0, 16); lsSet('study_current_user', nick);
+      authModal.classList.add('hidden'); showNick();
+    }
+    const ct = Number(mine.total) || 0;
+    const cts = Number(mine.totalS) || ct * 60;
+    if (cts > totalSec) { totalSec = cts; }
+    const cds = Number(mine.todayS) || (Number(mine.today) || 0) * 60;
+    if (mine.day === dayKey() && cds > today.sec) { today.sec = cds; }
+    saveTime(); updateStats();
+  }
+
+  // ---------- 계정 저장 (일정·할 일·자료·설정, 본인만 볼 수 있음) ----------
+  let applyingRemote = false, stateReady = false, stateTimer = null, stateWriting = false;
+  let stateDirty = false, stateFail = 0, lastStateJson = '', statePending = false;
+
+  function stable(v) {
+    if (Array.isArray(v)) return '[' + v.map(stable).join(',') + ']';
+    if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}';
+    return JSON.stringify(v);
+  }
+  function statePayload() {
+    return { v: 1, todos: todos, materials: materials, events: events, days: days.slice(-400), settings: settings, subjects: subjectLog, certDays: certDays };
+  }
+  function stateRef() { return cloud.db.doc('data/users/' + cloud.uid + '/state'); }
+
+  function scheduleCloudSave() {
+    if (!stateReady || applyingRemote) return;
+    statePending = true;
+    clearTimeout(stateTimer);
+    stateTimer = setTimeout(flushState, 800);
+  }
+  async function flushState() {
+    stateTimer = null;
+    if (!stateReady || !cloud.db || !cloud.uid) { statePending = false; return; }
+    const payload = statePayload();
+    const json = stable(payload);
+    if (json === lastStateJson) { statePending = false; return; }
+    const wait = 30000 - (Date.now() - stateFail);
+    if (stateFail && wait > 0) { stateTimer = setTimeout(flushState, wait); return; }
+    if (stateWriting) { stateDirty = true; return; }
+    stateWriting = true;
+    try {
+      await stateRef().set(JSON.parse(JSON.stringify(payload)));
+      lastStateJson = json; stateFail = 0;
+    } catch (e) {
+      stateFail = Date.now();
+      if (e && e.code === 'invalid_argument') { stateReady = false; toast('이 계정은 보기 전용이라 일정·할 일은 이 기기에만 저장돼요.'); }
+      else if (e && e.code === 'quota_exceeded') { toast('저장 공간이 가득 찼어요. 일부 항목을 지워주세요.'); }
+      else { stateTimer = setTimeout(flushState, 30000); }
+    }
+    stateWriting = false;
+    if (stateDirty) { stateDirty = false; stateTimer = setTimeout(flushState, 100); }
+    else if (!stateTimer) statePending = false;
+  }
+  window.addEventListener('pagehide', () => { if (statePending) flushState(); });
+
+  function mergeBy(a, b, keyFn) {
+    const seen = new Set(), out = [];
+    a.concat(b).forEach(x => { const k = keyFn(x); if (!seen.has(k)) { seen.add(k); out.push(x); } });
+    return out;
+  }
+  function applyRemote(d) {
+    applyingRemote = true;
+    try {
+      if (Array.isArray(d.todos)) todos = d.todos;
+      if (Array.isArray(d.materials)) materials = d.materials;
+      if (Array.isArray(d.events)) events = d.events;
+      if (Array.isArray(d.days)) days = Array.from(new Set(d.days.concat(days))).sort();
+      if (d.subjects && typeof d.subjects === 'object') { subjectLog = mergeSubjects(d.subjects, subjectLog); lsSet('study_subjects', subjectLog); }
+      if (Array.isArray(d.certDays)) { certDays = Array.from(new Set(d.certDays.concat(certDays))).sort(); lsSet('study_certdays', certDays); }
+      if (d.settings && typeof d.settings === 'object') {
+        settings = Object.assign({ focus: 25, brk: 5, goal: 120, sound: true }, d.settings);
+        lsSet('study_settings', settings);
+        $('set-focus').value = settings.focus; $('set-break').value = settings.brk;
+        $('set-goal').value = settings.goal; $('set-sound').checked = !!settings.sound;
+        if (!running) remainingMs = modeMs();
+      }
+      saveTime();
+      renderTodos(); renderMaterials(); renderEvents(); renderTimer(); updateStats();
+    } finally { applyingRemote = false; }
+  }
+  async function initState() {
+    try {
+      const ref = stateRef();
+      const snap = await ref.get();
+      const linked = lsGet('study_linked_uid', '') === cloud.uid;
+      const remote = snap.exists ? JSON.parse(JSON.stringify(snap.data())) : null;
+      let data;
+      if (!remote) data = statePayload();
+      else if (linked) data = remote;
+      else {
+        data = {
+          v: 1,
+          todos: mergeBy(remote.todos || [], todos, x => x.text + '|' + x.category),
+          materials: mergeBy(remote.materials || [], materials, x => x.url + '|' + x.title),
+          events: mergeBy(remote.events || [], events, x => x.date + '|' + x.title),
+          days: remote.days || [],
+          settings: remote.settings || settings,
+          subjects: mergeSubjects(remote.subjects || {}, subjectLog),
+          certDays: Array.from(new Set((remote.certDays || []).concat(certDays))).sort()
+        };
+      }
+      applyRemote(data);
+      lastStateJson = remote ? stable(remote) : '';
+      stateReady = true;
+      lsSet('study_linked_uid', cloud.uid);
+      if (!remote || !linked) {
+        scheduleCloudSave();
+        if (!linked) toast('일정·할 일·자료가 내 계정에 저장돼요. 이제 어느 기기에서나 같이 보여요.');
+      }
+      ref.onSnapshot((s) => {
+        if (!s.exists || s.metadata.hasPendingWrites || statePending || stateWriting) return;
+        const d = JSON.parse(JSON.stringify(s.data()));
+        const st = stable(d);
+        if (st === lastStateJson || st === stable(statePayload())) { lastStateJson = st; return; }
+        lastStateJson = st;
+        applyRemote(d);
+      }, () => {});
+    } catch (e) { /* 실패하면 이 기기에만 저장 */ }
+  }
+
+  // Firebase 웹 앱 설정 (tubestudy)
+  // 웹 API 키는 공개 클라이언트 설정이며, 실제 접근 제어는 Firestore 규칙이 담당합니다.
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyDzQsvvnxKJA26Ww4rsX0tLFJICuU8Bo7U',
+    authDomain: 'tubestudy.firebaseapp.com',
+    projectId: 'tubestudy',
+    storageBucket: 'tubestudy.firebasestorage.app',
+    messagingSenderId: '592063300574',
+    appId: '1:592063300574:web:6f4f693c56112c3ff4934f',
+    measurementId: 'G-Q6WX6DZE09'
+  };
+
+  let firebaseAuth = null;
+  let authCallbackBusy = false;
+  let cloudListenersStarted = false;
+
+  function showLoginGate(message, mode) {
+    const panel = $('google-login-panel'), form = $('auth-form');
+    authModal.classList.remove('hidden');
+    if (mode === 'profile') {
+      panel.classList.add('hidden'); form.classList.remove('hidden');
+      $('auth-title').textContent = '학습 포털 프로필 설정';
+      $('auth-status').textContent = message || '랭킹에 표시될 닉네임을 입력하세요.';
+      $('auth-cancel').classList.add('hidden');
+    } else {
+      panel.classList.remove('hidden'); form.classList.add('hidden');
+      $('auth-title').textContent = mode === 'banned' ? '이용이 제한된 계정' : 'Google 로그인';
+      $('auth-status').textContent = message || '학습 포털을 이용하려면 Google 계정으로 로그인하세요.';
+      $('google-login-btn').disabled = mode === 'banned';
+      $('google-login-btn').classList.toggle('opacity-50', mode === 'banned');
+      $('google-login-btn').textContent = mode === 'banned' ? '차단된 계정' : 'Google 계정으로 로그인';
+    }
+  }
+
+  async function handleGoogleLogin() {
+    if (!firebaseAuth) { toast('Firebase 설정을 확인해 주세요.'); return; }
+    const btn = $('google-login-btn');
+    btn.disabled = true;
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      await firebaseAuth.signInWithPopup(provider);
+    } catch (e) {
+      console.error('Google 로그인 실패:', e);
+      let msg = 'Google 로그인에 실패했어요. 다시 시도해 주세요.';
+      if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user')) msg = '로그인 창이 닫혔어요. 팝업을 허용한 뒤 다시 시도해 주세요.';
+      else if (e && e.code === 'auth/unauthorized-domain') msg = '현재 웹사이트 주소가 Firebase 승인 도메인에 없어요. Firebase Authentication 설정에서 도메인을 추가해야 해요.';
+      else if (e && e.code === 'auth/operation-not-allowed') msg = 'Firebase Authentication에서 Google 로그인 제공업체를 사용 설정해 주세요.';
+      $('auth-status').textContent = msg;
+      toast(msg);
+    } finally {
+      if (btn && $('google-login-panel') && !$('google-login-panel').classList.contains('hidden')) btn.disabled = false;
+    }
+  }
+  $('google-login-btn').addEventListener('click', handleGoogleLogin);
+  $('signout-btn').addEventListener('click', async () => {
+    if (!firebaseAuth) return;
+    try { await firebaseAuth.signOut(); window.location.reload(); }
+    catch (e) { toast('로그아웃하지 못했어요. 다시 시도해 주세요.'); }
+  });
+
+  async function startCloudForUser(user) {
+    if (authCallbackBusy) return;
+    authCallbackBusy = true;
+    try {
+      cloud.db = firebase.firestore();
+      const profileRef = cloud.db.doc('users/' + user.uid);
+      const profileSnap = await profileRef.get();
+      if (profileSnap.exists && profileSnap.data().banned === true) {
+        cloud.uid = null;
+        cloud.canWrite = false;
+        cloud.state = 'banned';
+        $('signout-btn').classList.remove('hidden');
+        showLoginGate('이 계정은 사이트 관리자가 차단했어요. 다른 계정으로 로그인하거나 관리자에게 문의하세요.', 'banned');
+        renderRank();
+        return;
+      }
+      const profile = profileSnap.exists ? profileSnap.data() : {};
+      if (!profileSnap.exists) {
+        await profileRef.set({
+          nick: '', email: user.email || '', photoURL: user.photoURL || '',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        // Keep contact/profile metadata current; banned status is never writable from this page.
+        await profileRef.set({
+          email: user.email || '', photoURL: user.photoURL || '',
+          lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+      cloud.uid = user.uid;
+      cloud.canWrite = true;
+      cloud.state = 'loading';
+      nick = String(profile.nick || '').slice(0, 16);
+      lsSet('study_current_user', nick);
+      $('signout-btn').classList.remove('hidden');
+      if (nick) {
+        authModal.classList.add('hidden');
+        showNick();
+      } else {
+        $('nickname-input').value = String(lsGet('study_current_user_draft', '') || '');
+        showLoginGate('랭킹에 표시될 닉네임을 정해 주세요.', 'profile');
+      }
+      if (cloudListenersStarted) return;
+      cloudListenersStarted = true;
+      initState();
+      subscribePosts();
+      subscribeCerts();
+      cloud.db.collection('ranks').limit(500).onSnapshot((snap) => {
+        ranks = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        cloud.state = 'ready';
+        adoptFromCloud();
+        renderRank();
+        syncRank();
+      }, (e) => {
+        console.error('랭킹을 불러오지 못했습니다.', e);
+        cloud.state = 'error'; renderRank();
+      });
+    } catch (e) {
+      console.error('클라우드 연결 실패:', e);
+      cloud.state = 'error';
+      showLoginGate('Firebase 연결에 실패했어요. 승인 도메인과 Firestore 규칙을 확인해 주세요.', 'login');
+      renderRank();
+    } finally {
+      authCallbackBusy = false;
+    }
+  }
+
+  async function initCloud() {
+    try {
+      if (!window.firebase) throw new Error('Firebase SDK를 불러오지 못했습니다.');
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      cloud.db = firebase.firestore();
+      showLoginGate('Google 로그인 상태를 확인하고 있어요…', 'login');
+      $('google-login-btn').disabled = true;
+      firebaseAuth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          cloud.uid = null;
+          cloud.canWrite = false;
+          cloud.state = 'signed-out';
+          $('signout-btn').classList.add('hidden');
+          showLoginGate('학습 포털을 이용하려면 Google 계정으로 로그인하세요.', 'login');
+          $('google-login-btn').disabled = false;
+          renderRank();
+          return;
+        }
+        await startCloudForUser(user);
+      });
+    } catch (e) {
+      console.error('Firebase 초기화 실패:', e);
+      cloud.state = 'unavailable';
+      showLoginGate('Firebase 연결에 실패했어요. 웹 앱 설정을 확인해 주세요.', 'login');
+      $('auth-status').textContent += ' 오류: ' + (e.message || '알 수 없는 오류');
+      renderRank();
+    }
+  }
+
+  function renderRank() {
+    const list = $('leaderboard-list'), note = $('rank-note');
+    const tk = dayKey();
+    const localMe = { total: Math.floor(totalSec), today: today.day === tk ? Math.floor(today.sec) : 0, streak: streak() };
+    let rows = [];
+    if (cloud.state === 'ready') {
+      rows = ranks.map(r => ({
+        id: r.id, nick: String(r.nick || '이름없음').slice(0, 16),
+        total: Number(r.totalS) || (Number(r.total) || 0) * 60,
+        today: r.day === tk ? (Number(r.todayS) || (Number(r.today) || 0) * 60) : 0,
+        streak: effStreak(r.streak, r.last)
+      }));
+      const mine = rows.find(r => r.id === cloud.uid);
+      if (mine) { mine.total = Math.max(mine.total, localMe.total); mine.today = Math.max(mine.today, localMe.today); mine.streak = Math.max(mine.streak, localMe.streak); }
+      else if (nick) rows.push({ id: cloud.uid, nick: nick, total: localMe.total, today: localMe.today, streak: localMe.streak });
+    } else if (nick) {
+      rows = [{ id: 'me', nick: nick, total: localMe.total, today: localMe.today, streak: localMe.streak }];
+    }
+    const meId = cloud.uid || 'me';
+    const key = rankTab;
+    rows.push(rivalRow());
+    rows.sort((a, b) => (b[key] - a[key]) || (b.total - a.total) || a.nick.localeCompare(b.nick, 'ko'));
+    renderStreakRank(rows);
+    updatePostUI();
+
+    const notes = {
+      loading: '랭킹을 불러오는 중이에요…',
+      unavailable: '공유 랭킹 설정이 아직 완료되지 않았어요. 지금은 이 기기의 기록만 표시돼요.',
+      error: '랭킹을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.'
+    };
+    let msg = notes[cloud.state] || '';
+    if (cloud.state === 'ready' && !cloud.canWrite) msg = '보기 전용 권한이라 내 기록은 랭킹에 올라가지 않아요.';
+    if (cloud.state === 'ready' && !nick) msg = '닉네임을 정하면 랭킹에 참여할 수 있어요.';
+    note.textContent = msg; note.classList.toggle('hidden', !msg);
+
+    list.innerHTML = '';
+    if (rows.length === 0) { list.innerHTML = '<p class="text-center text-slate-400 py-4 text-sm">아직 참여한 사람이 없어요.</p>'; return; }
+    rows.forEach((r, i) => {
+      const isMe = r.id === meId;
+      const div = document.createElement('div');
+      div.className = `flex items-center justify-between p-3 rounded-xl border ${isMe ? 'bg-indigo-50/70 border-indigo-200 font-bold text-indigo-900' : 'bg-white border-slate-100 text-slate-700'} text-sm`;
+      let badge = `<span class="w-6 text-center text-xs font-bold text-slate-400">${i + 1}</span>`;
+      if (i === 0 && r[key] > 0) badge = `<span class="w-6 text-center" aria-label="1위">👑</span>`;
+      else if (i === 1 && r[key] > 0) badge = `<span class="w-6 text-center" aria-label="2위">🥈</span>`;
+      else if (i === 2 && r[key] > 0) badge = `<span class="w-6 text-center" aria-label="3위">🥉</span>`;
+      div.innerHTML = `
+        <div class="flex items-center gap-3 min-w-0">${badge}<span class="truncate">${esc(r.nick)}${isMe ? ' (나)' : ''}</span></div>
+        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-semibold whitespace-nowrap">${fmtSec(r[key])}</span>`;
+      list.appendChild(div);
+    });
+  }
+
+  // ---------- 과목별 통계 ----------
+  const SUBJECT_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+  function subjectColor(name) {
+    const i = SUBJECTS.indexOf(name);
+    return SUBJECT_COLORS[i >= 0 ? i : 4 + (hash32(name) % 4)];
+  }
+  function mergeSubjects(a, b) {
+    const out = {};
+    [a, b].forEach((src) => {
+      Object.keys(src || {}).forEach((d) => {
+        const o = out[d] || (out[d] = {});
+        const s = src[d] || {};
+        Object.keys(s).forEach((n) => { o[n] = Math.max(o[n] || 0, Number(s[n]) || 0); });
+      });
+    });
+    return out;
+  }
+  function addSubject(name, sec) {
+    const k = dayKey();
+    name = String(name || '기타').slice(0, 10);
+    const day = subjectLog[k] || (subjectLog[k] = {});
+    day[name] = Math.round((Number(day[name]) || 0) + sec);
+    const keys = Object.keys(subjectLog).sort();
+    while (keys.length > 400) delete subjectLog[keys.shift()];
+    lsSet('study_subjects', subjectLog);
+  }
+  function renderSubjectStats() {
+    const box = $('subject-stats');
+    if (!box) return;
+    const range = $('stats-range').value;
+    let from = '';
+    if (range === 'today') from = dayKey();
+    else if (range === '7' || range === '30') { const d = new Date(); d.setDate(d.getDate() - (Number(range) - 1)); from = dayKey(d); }
+    const totals = {}; let sum = 0;
+    Object.keys(subjectLog).forEach((k) => {
+      if (from && k < from) return;
+      const day = subjectLog[k] || {};
+      Object.keys(day).forEach((n) => { const s = Number(day[n]) || 0; if (s > 0) { totals[n] = (totals[n] || 0) + s; sum += s; } });
+    });
+    const names = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+    if (!names.length) { box.innerHTML = '<p class="text-center text-slate-400 py-4 text-sm">아직 기록이 없어요. 타이머를 저장할 때 과목을 고르면 여기에 쌓여요.</p>'; return; }
+    const maxSec = Math.max.apply(null, names.map((n) => totals[n]));
+    box.innerHTML = `<p class="text-xs text-slate-500">합계 <b class="text-slate-800">${fmtSec(sum)}</b></p><div class="flex gap-3 overflow-x-auto pb-1">` + names.map((n) => {
+      const pct = Math.round(totals[n] / sum * 100);
+      const hh = 6 + Math.round(totals[n] / maxSec * 72);
+      const t = totals[n] < 60 ? Math.floor(totals[n]) + '초' : fmt(totals[n] / 60);
+      return `<div class="flex flex-col flex-1 min-w-[3.75rem] items-center"><div class="flex flex-col justify-end items-center w-full h-44 border-b border-slate-200"><span class="text-[11px] font-semibold text-slate-600 text-center leading-tight mb-1">${t}<br><span class="font-normal text-slate-400">${pct}%</span></span><div class="w-full max-w-[3.5rem] rounded-t-lg" style="height:${hh}%;background:${subjectColor(n)}"></div></div><span class="mt-1.5 text-xs font-medium text-slate-700 truncate max-w-full">${esc(n)}</span></div>`;
+    }).join('') + '</div>';
+  }
+  $('stats-range').addEventListener('change', renderSubjectStats);
+
+  // ---------- 공부 인증 갤러리 ----------
+  let postDocs = [], galleryItems = [], pickedPhoto = null, posting = false;
+  const PHOTO_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/;
+  function agoText(ts) {
+    const m = Math.floor(Math.max(0, Date.now() - ts) / 60000);
+    if (m < 1) return '방금 전';
+    if (m < 60) return m + '분 전';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + '시간 전';
+    const d = new Date(ts);
+    return (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+  }
+  function updatePostUI() {
+    const form = $('post-form'), note = $('post-note');
+    if (!form) return;
+    let msg = '', can = false;
+    if (cloud.state === 'loading') msg = '불러오는 중이에요…';
+    else if (!cloud.db || !cloud.uid) msg = '인증 사진 공유를 사용하려면 Firebase 설정이 필요해요.';
+    else if (!cloud.canWrite) msg = '보기 전용 권한이라 사진은 볼 수만 있어요.';
+    else if (!nick) msg = '닉네임을 정하면 인증을 올릴 수 있어요.';
+    else { can = true; msg = '올린 사진은 이 페이지에 접속한 모든 사람에게 보여요. 얼굴·이름·주소 같은 개인정보가 나오지 않게 해주세요. 내 사진은 최근 3장만 남아요.'; }
+    note.textContent = msg;
+    form.classList.toggle('hidden', !can);
+  }
+  async function compressImage(file) {
+    let bmp;
+    try { bmp = await createImageBitmap(file); }
+    catch (e) {
+      bmp = await new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); });
+    }
+    const w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight;
+    let scale = Math.min(1, 720 / Math.max(w, h));
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+      c.getContext('2d').drawImage(bmp, 0, 0, cw, ch);
+      for (const q of [0.7, 0.55, 0.4]) {
+        const url = c.toDataURL('image/jpeg', q);
+        if (url.length <= 55000) return url;
+      }
+      scale *= 0.8;
+    }
+    throw new Error('too_big');
+  }
+  function renderGallery() {
+    const box = $('gallery');
+    if (!box) return;
+    const all = [];
+    postDocs.forEach((doc) => {
+      const items = Array.isArray(doc.items) ? doc.items : [];
+      items.forEach((it) => {
+        if (!it || typeof it.photo !== 'string' || it.photo.length > 120000 || !PHOTO_RE.test(it.photo)) return;
+        all.push({ uid: doc.id, nick: String(doc.nick || '이름없음').slice(0, 16), id: String(it.id || ''), ts: Number(it.ts) || 0, photo: it.photo, caption: String(it.caption || '').slice(0, 60), todaySec: Number(it.todaySec) || 0 });
+      });
+    });
+    all.sort((a, b) => b.ts - a.ts);
+    galleryItems = all.slice(0, 30);
+    box.innerHTML = '';
+    if (!galleryItems.length) { box.innerHTML = '<p class="col-span-full text-center text-slate-400 py-4 text-sm">아직 올라온 인증이 없어요. 첫 인증을 올려보세요!</p>'; return; }
+    galleryItems.forEach((p, i) => {
+      const mine = p.uid === cloud.uid, canDel = mine || cloud.isOwner;
+      const div = document.createElement('div');
+      div.className = 'rounded-xl border border-slate-200 overflow-hidden bg-white';
+      div.innerHTML = `<button data-open="${i}" class="block w-full aspect-square bg-slate-100" aria-label="사진 크게 보기"><img src="${p.photo}" alt="공부 인증 사진" class="w-full h-full object-cover"></button>
+        <div class="p-2.5 text-xs space-y-0.5">
+          <p class="font-bold text-slate-800 truncate">${esc(p.nick)}${mine ? ' (나)' : ''}</p>
+          <p class="text-slate-500">${p.todaySec >= 60 ? '오늘 ' + fmt(p.todaySec / 60) + ' · ' : ''}${agoText(p.ts)}</p>
+          ${p.caption ? '<p class="text-slate-700 break-words">' + esc(p.caption) + '</p>' : ''}
+          ${canDel ? '<button data-del="' + i + '" class="text-slate-400 hover:text-red-500 transition mt-1">🗑️ 삭제</button>' : ''}
+        </div>`;
+      box.appendChild(div);
+    });
+  }
+  let certDocs = [], calSel = '', certBusy = false, certFail = 0, lastCertJson = '';
+  function certByDate() {
+    const map = {};
+    const add = (key, uid, nk) => { const arr = map[key] || (map[key] = []); if (!arr.some((x) => x.uid === uid)) arr.push({ uid: uid, nick: nk }); };
+    certDocs.forEach((doc) => {
+      const nk = String(doc.nick || '이름없음').slice(0, 16);
+      (Array.isArray(doc.days) ? doc.days : []).forEach((k) => { if (typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)) add(k, doc.id, nk); });
+    });
+    const meId = cloud.uid || 'me';
+    if (nick) certDays.forEach((k) => add(k, meId, nick));
+    Object.keys(map).forEach((k) => map[k].sort((a, b) => a.nick.localeCompare(b.nick, 'ko')));
+    return map;
+  }
+  async function syncCerts() {
+    if (!cloud.db || !cloud.uid || !nick || !cloud.canWrite) return;
+    const json = nick + '|' + certDays.slice(-400).join(',');
+    if (json === lastCertJson || certBusy || Date.now() - certFail < 30000) return;
+    certBusy = true;
+    try {
+      await cloud.db.doc('certs/' + cloud.uid).set({ nick: nick, days: certDays.slice(-400) });
+      lastCertJson = json;
+    } catch (e) { certFail = Date.now(); }
+    certBusy = false;
+  }
+  function subscribeCerts() {
+    try {
+      cloud.db.collection('certs').limit(100).onSnapshot((snap) => {
+        certDocs = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        renderCertCal();
+        syncCerts();
+      }, () => {});
+    } catch (e) {}
+  }
+  $('cal-grid').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-date]');
+    if (b) { calSel = b.dataset.date; renderCertCal(); }
+  });
+  let calMonth = (function () { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d; })();
+  function addCert(key) {
+    if (certDays.includes(key)) return;
+    certDays.push(key); certDays.sort(); syncCerts();
+    lsSet('study_certdays', certDays);
+    renderCertCal();
+  }
+  function renderCertCal() {
+    const grid = $('cal-grid');
+    if (!grid) return;
+    const y = calMonth.getFullYear(), m = calMonth.getMonth();
+    $('cal-title').textContent = y + '년 ' + (m + 1) + '월';
+    const set = new Set(certDays);
+    const byDate = certByDate();
+    const first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate();
+    const tk = dayKey();
+    let html = '', monthCount = 0;
+    for (let i = 0; i < first; i++) html += '<div></div>';
+    for (let d = 1; d <= last; d++) {
+      const key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const cert = set.has(key);
+      if (cert) monthCount++;
+      const who = byDate[key] || [];
+      const shown = who.slice(0, 2).map((w) => `<span class="block truncate leading-tight font-semibold">${esc(w.nick)}<span class="block text-[9px] font-normal text-emerald-600"><span>✅</span><span class="hidden sm:inline"> 인증완료</span></span></span>`).join('');
+      const more = who.length > 2 ? `<span class="block text-[9px] text-slate-400">+${who.length - 2}명</span>` : '';
+      html += `<button type="button" data-date="${key}" class="min-h-[4.5rem] min-w-0 overflow-hidden rounded-lg p-1 text-left text-[10px] flex flex-col gap-0.5 transition ${cert ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-50 text-slate-500'} ${key === tk ? 'ring-2 ring-indigo-500' : ''} ${key === calSel ? 'outline outline-2 outline-violet-500' : ''}"><span class="text-xs font-bold">${d}</span>${shown}${more}</button>`;
+    }
+    grid.innerHTML = html;
+    const now = new Date();
+    $('cal-next').disabled = y > now.getFullYear() || (y === now.getFullYear() && m >= now.getMonth());
+    $('cal-summary').textContent = `${m + 1}월 · 내 인증 ${monthCount}일 · 오늘 인증 ${(byDate[tk] || []).length}명`;
+    const selWho = calSel && byDate[calSel] ? byDate[calSel] : [];
+    $('cal-detail').innerHTML = calSel ? '<b>' + esc(calSel) + '</b> 인증완료: ' + (selWho.length ? selWho.map((w) => esc(w.nick)).join(', ') : '아직 없어요') : '날짜를 누르면 인증한 사람을 볼 수 있어요.';
+  }
+  $('cal-prev').addEventListener('click', () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCertCal(); });
+  $('cal-next').addEventListener('click', () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCertCal(); });
+
+  async function uploadPost() {
+    if (posting || !cloud.db || !cloud.uid || !nick || !cloud.canWrite) return;
+    if (!pickedPhoto) { toast('사진을 먼저 선택해 주세요.'); return; }
+    posting = true; $('post-submit').disabled = true;
+    try {
+      const ref = cloud.db.doc('posts/' + cloud.uid);
+      let cur = [];
+      try { const s = await ref.get(); if (s.exists) { const dd = JSON.parse(JSON.stringify(s.data())); if (Array.isArray(dd.items)) cur = dd.items; } } catch (e) {}
+      const item = { id: String(Date.now()), ts: Date.now(), photo: pickedPhoto, caption: $('post-caption').value.trim().slice(0, 60), todaySec: today.day === dayKey() ? Math.floor(today.sec) : 0 };
+      await ref.set({ nick: nick, items: [item].concat(cur).slice(0, 3) });
+      pickedPhoto = null; $('post-file').value = ''; $('post-caption').value = '';
+      $('post-preview').classList.add('hidden');
+      addCert(dayKey());
+      toast('공부 인증이 올라갔어요!');
+    } catch (e) {
+      toast(e && e.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요. 오래된 인증을 지워주세요.' : '인증을 올리지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    }
+    posting = false; $('post-submit').disabled = false;
+  }
+  async function deletePost(uid, id) {
+    if (!cloud.db) return;
+    try {
+      const ref = cloud.db.doc('posts/' + uid);
+      const s = await ref.get();
+      if (!s.exists) return;
+      const dd = JSON.parse(JSON.stringify(s.data()));
+      const items = (Array.isArray(dd.items) ? dd.items : []).filter((it) => String(it.id) !== id);
+      if (items.length) await ref.set({ nick: dd.nick || '', items: items }); else await ref.delete();
+      toast('인증을 삭제했어요.');
+    } catch (e) { toast('삭제하지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
+  }
+  async function subscribePosts() {
+    // 닉네임 기반 익명 이용: Claude 전용 사용자/소유자 API를 사용하지 않습니다.
+    cloud.isOwner = false;
+    try {
+      cloud.db.collection('posts').limit(60).onSnapshot((snap) => {
+        postDocs = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        const mineDoc = postDocs.find((x) => x.id === cloud.uid);
+        if (mineDoc && Array.isArray(mineDoc.items)) mineDoc.items.forEach((it) => { const t = Number(it && it.ts); if (t) addCert(dayKey(new Date(t))); });
+        renderGallery();
+      }, () => {});
+    } catch (e) {}
+  }
+  $('post-file').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    pickedPhoto = null; $('post-preview').classList.add('hidden');
+    if (!f) return;
+    try {
+      pickedPhoto = await compressImage(f);
+      const p = $('post-preview'); p.src = pickedPhoto; p.classList.remove('hidden');
+    } catch (err) { toast('사진을 불러오지 못했어요. 다른 사진으로 시도해 주세요.'); }
+  });
+  $('post-submit').addEventListener('click', uploadPost);
+  $('gallery').addEventListener('click', (e) => {
+    const o = e.target.closest('[data-open]'), d = e.target.closest('[data-del]');
+    if (o) {
+      const p = galleryItems[+o.dataset.open];
+      if (p) { $('lightbox-img').src = p.photo; $('lightbox').classList.remove('hidden'); $('lightbox').classList.add('flex'); }
+    } else if (d) {
+      if (!d.dataset.armed) {
+        d.dataset.armed = '1'; d.textContent = '한 번 더 눌러 삭제';
+        setTimeout(() => { delete d.dataset.armed; d.textContent = '🗑️ 삭제'; }, 3000);
+        return;
+      }
+      const p = galleryItems[+d.dataset.del];
+      if (p) deletePost(p.uid, p.id);
+    }
+  });
+  $('lightbox').addEventListener('click', () => { $('lightbox').classList.add('hidden'); $('lightbox').classList.remove('flex'); $('lightbox-img').removeAttribute('src'); });
+
+  // ---------- 가상 경쟁상대 (매일 6~8시간 꾸준히 공부) ----------
+  const RIVAL = { name: '공부의 신', start: Date.UTC(2026, 9, 14) };
+  function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function seoulKey(d) { return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  function rivalDaySec(key) { return 21600 + (hash32(key + ':rival') % 7201); } // 하루 6시간 ~ 8시간
+  function rivalRow() {
+    const now = new Date(Date.now() + 9 * 3600 * 1000); // 서울 기준
+    const secOfDay = now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
+    const f = Math.min(1, Math.max(0, (secOfDay - 7 * 3600) / (16 * 3600))); // 07시~23시에 걸쳐 공부
+    const dayStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const todaySec = dayStart >= RIVAL.start ? Math.floor(rivalDaySec(seoulKey(now)) * f) : 0;
+    const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    let total = 0, passed = 0;
+    for (let t = RIVAL.start; t < end; t += 86400000) { total += rivalDaySec(seoulKey(new Date(t))); passed++; }
+    total += todaySec;
+    return { id: 'rival', nick: RIVAL.name, total: total, today: todaySec, streak: passed + (todaySec >= 60 ? 1 : 0), virtual: true };
+  }
+
+  function renderStreakRank(rows) {
+    const box = $('streak-list');
+    box.innerHTML = '';
+    const list = rows.slice().sort((a, b) => (b.streak - a.streak) || (b.total - a.total) || a.nick.localeCompare(b.nick, 'ko'));
+    if (list.length === 0) { box.innerHTML = '<p class="text-center text-slate-400 py-2 text-xs">아직 참여한 사람이 없어요.</p>'; return; }
+    const meId = cloud.uid || 'me';
+    list.forEach((r, i) => {
+      const isMe = r.id === meId;
+      const div = document.createElement('div');
+      div.className = `flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs ${isMe ? 'bg-indigo-50/70 font-bold text-indigo-900' : 'text-slate-700'}`;
+      const medal = r.streak > 0 && i === 0 ? '👑' : r.streak > 0 && i === 1 ? '🥈' : r.streak > 0 && i === 2 ? '🥉' : String(i + 1);
+      div.innerHTML = `<span class="flex items-center gap-2 min-w-0"><span class="w-5 text-center text-slate-400">${medal}</span><span class="truncate">${esc(r.nick)}${isMe ? ' (나)' : ''}</span></span><span class="font-semibold whitespace-nowrap">🔥 ${r.streak}일</span>`;
+      box.appendChild(div);
+    });
+  }
+
+  function setRankTab(t) {
+    rankTab = t;
+    $('rank-today').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'today' ? 'tab-on' : 'tab-off');
+    $('rank-total').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'total' ? 'tab-on' : 'tab-off');
+    
+    renderRank();
+  }
+  $('rank-today').addEventListener('click', () => setRankTab('today'));
+  $('rank-total').addEventListener('click', () => setRankTab('total'));
+  
+
+  // ---------- 프로필 ----------
+  const authModal = $('auth-modal');
+  function openAuth(edit) {
+    if (!cloud.uid) { showLoginGate('학습 포털을 이용하려면 Google 계정으로 로그인하세요.', 'login'); return; }
+    $('nickname-input').value = nick;
+    $('google-login-panel').classList.add('hidden');
+    $('auth-form').classList.remove('hidden');
+    $('auth-title').textContent = edit ? '닉네임 변경' : '학습 포털 프로필 설정';
+    $('auth-status').textContent = '랭킹에 표시될 닉네임을 입력하세요.';
+    $('auth-cancel').classList.toggle('hidden', !edit);
+    authModal.classList.remove('hidden');
+    setTimeout(() => $('nickname-input').focus(), 50);
+  }
+  function showNick() {
+    const b = $('nick-badge');
+    if (nick) { $('display-nickname').textContent = nick; b.classList.remove('hidden'); b.classList.add('flex'); }
+  }
+  $('auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = $('nickname-input').value.trim().slice(0, 16);
+    if (!v) return;
+    if (!cloud.db || !cloud.uid || !cloud.canWrite) { toast('먼저 Google 계정으로 로그인해 주세요.'); return; }
+    const submit = $('auth-form').querySelector('button[type="submit"]');
+    submit.disabled = true;
+    try {
+      const user = firebaseAuth && firebaseAuth.currentUser;
+      await cloud.db.doc('users/' + cloud.uid).set({
+        nick: v,
+        email: user && user.email || '',
+        photoURL: user && user.photoURL || '',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      nick = v; lsSet('study_current_user', nick); lsSet('study_current_user_draft', '');
+      authModal.classList.add('hidden');
+      $('google-login-panel').classList.remove('hidden');
+      $('auth-form').classList.add('hidden');
+      showNick(); renderRank(); syncRank(true);
+    } catch (err) {
+      console.error('프로필 저장 실패:', err);
+      toast('닉네임을 저장하지 못했어요. Firestore 보안 규칙을 확인해 주세요.');
+    } finally { submit.disabled = false; }
+  });
+  $('auth-cancel').addEventListener('click', () => authModal.classList.add('hidden'));
+  $('nick-badge').addEventListener('click', () => openAuth(true));
+
+  // ---------- 투두 ----------
+  const todoList = $('todo-list');
+  function renderTodos() {
+    todoList.innerHTML = '';
+    if (todos.length === 0) todoList.innerHTML = '<p class="text-center text-slate-400 py-4 text-sm">등록된 학습 목표가 없습니다.</p>';
+    todos.forEach((todo, i) => {
+      const li = document.createElement('li');
+      li.className = `flex items-center justify-between p-3 rounded-xl border ${todo.completed ? 'bg-slate-50 border-slate-100 text-slate-400 line-through' : 'bg-white border-slate-200 text-slate-700'} transition`;
+      li.innerHTML = `
+        <div class="flex items-center gap-3 min-w-0">
+          <input type="checkbox" data-t="${i}" ${todo.completed ? 'checked' : ''} aria-label="완료" class="w-4 h-4 cursor-pointer">
+          <span class="text-sm font-medium break-words">${esc(todo.text)}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${todo.completed ? 'bg-slate-200 text-slate-500' : 'bg-indigo-50 text-indigo-600'}">${esc(todo.category)}</span>
+        </div>
+        <button data-d="${i}" aria-label="삭제" class="text-slate-400 hover:text-red-500 transition px-2 py-1 text-sm">🗑️</button>`;
+      todoList.appendChild(li);
+    });
+    updateStats(); lsSet('study_todos', todos);
+  }
+  todoList.addEventListener('click', (e) => {
+    const c = e.target.closest('[data-t]'), d = e.target.closest('[data-d]');
+    if (c) { const i = +c.dataset.t; todos[i].completed = !todos[i].completed; renderTodos(); }
+    else if (d) { todos.splice(+d.dataset.d, 1); renderTodos(); }
+  });
+  $('todo-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('todo-input');
+    if (!input.value.trim()) return;
+    todos.push({ text: input.value.trim(), category: pickCategory('todo-category', 'todo-custom'), completed: false });
+    input.value = ''; $('todo-custom').value = ''; renderTodos();
+  });
+  $('clear-done').addEventListener('click', () => { todos = todos.filter(t => !t.completed); renderTodos(); });
+
+  // ---------- 자료 ----------
+  const materialList = $('material-list');
+  function renderFilter() {
+    const sel = $('material-filter'), cur = sel.value;
+    const base = SUBJECTS.filter(s => s !== '기타');
+    const all = base.slice();
+    materials.forEach(m => { if (m.category && !all.includes(m.category)) all.push(m.category); });
+    sel.innerHTML = '<option value="">전체 과목</option>' + all.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    sel.value = all.includes(cur) ? cur : '';
+  }
+  function renderMaterials() {
+    renderFilter();
+    const f = $('material-filter').value;
+    materialList.innerHTML = '';
+    const shown = materials.map((m, i) => ({ m, i })).filter(x => !f || x.m.category === f);
+    $('material-count').textContent = materials.length ? `(${materials.length})` : '';
+    if (shown.length === 0) materialList.innerHTML = '<p class="sm:col-span-2 text-center text-slate-400 py-4 text-sm">저장된 학습 자료가 없습니다.</p>';
+    shown.forEach(({ m, i }) => {
+      const div = document.createElement('div');
+      div.className = 'p-3 rounded-xl border border-slate-200 bg-white flex flex-col justify-between gap-2 shadow-sm';
+      div.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">${esc(m.category)}</span>
+            <h4 class="text-sm font-bold text-slate-800 mt-1 break-words">${esc(m.title)}</h4>
+          </div>
+          <button data-md="${i}" aria-label="삭제" class="text-slate-400 hover:text-red-500 transition text-sm">🗑️</button>
+        </div>
+        <a href="${esc(safeUrl(m.url))}" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-600 hover:underline font-medium mt-1">↗ 링크 바로가기</a>`;
+      materialList.appendChild(div);
+    });
+    lsSet('study_materials', materials);
+  }
+  materialList.addEventListener('click', (e) => {
+    const d = e.target.closest('[data-md]');
+    if (d) { materials.splice(+d.dataset.md, 1); renderMaterials(); }
+  });
+  $('material-filter').addEventListener('change', renderMaterials);
+  $('material-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const t = $('material-title'), u = $('material-url');
+    if (!t.value.trim() || !u.value.trim()) return;
+    materials.push({ title: t.value.trim(), url: u.value.trim(), category: pickCategory('material-category', 'material-custom') });
+    t.value = ''; u.value = ''; $('material-custom').value = ''; renderMaterials();
+  });
+
+  // ---------- 일정 (D-day) ----------
+  const eventList = $('event-list');
+  function ddayLabel(dateStr) {
+    const p = String(dateStr).split('-').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return { text: '', past: false };
+    const target = new Date(p[0], p[1] - 1, p[2]);
+    const now = new Date(); const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((target - base) / 86400000);
+    if (diff === 0) return { text: 'D-Day', past: false };
+    return diff > 0 ? { text: 'D-' + diff, past: false } : { text: 'D+' + (-diff), past: true };
+  }
+  function renderEvents() {
+    eventList.innerHTML = '';
+    if (events.length === 0) eventList.innerHTML = '<p class="text-center text-slate-400 py-4 text-sm">등록된 일정이 없습니다.</p>';
+    events.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach((ev) => {
+      const idx = events.indexOf(ev);
+      const dd = ddayLabel(ev.date);
+      const li = document.createElement('li');
+      li.className = `flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white text-sm ${dd.past ? 'opacity-60' : ''}`;
+      li.innerHTML = `
+        <div class="flex items-center gap-3 min-w-0">
+          
+          <div class="min-w-0"><p class="font-medium text-slate-700 break-words">${esc(ev.title)}</p><p class="flex items-center gap-2 mt-0.5 text-xs text-slate-400"><span>${esc(ev.date)}</span><span class="bg-violet-50 text-violet-600 font-bold px-2 py-0.5 rounded-md whitespace-nowrap">${esc(dd.text)}</span></p></div>
+        </div>
+        <button data-de="${idx}" aria-label="삭제" class="text-slate-400 hover:text-red-500 transition px-2 py-1">🗑️</button>`;
+      eventList.appendChild(li);
+    });
+    lsSet('study_events', events);
+    (function () {
+      const box = $('header-dday');
+      const next = events.map(ev => ({ ev: ev, dd: ddayLabel(ev.date) }))
+        .filter(x => x.dd.text && !x.dd.past)
+        .sort((a, b) => String(a.ev.date).localeCompare(String(b.ev.date)))[0];
+      if (!next) { box.classList.add('hidden'); box.classList.remove('flex'); return; }
+      $('hd-text').textContent = next.dd.text;
+      $('hd-title').textContent = next.ev.title;
+      box.title = next.ev.date + ' ' + next.ev.title;
+      box.classList.remove('hidden'); box.classList.add('flex');
+    })();
+  }
+  eventList.addEventListener('click', (e) => {
+    const d = e.target.closest('[data-de]');
+    if (d) { events.splice(+d.dataset.de, 1); renderEvents(); }
+  });
+  $('event-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const t = $('event-title'), d = $('event-date');
+    if (!t.value.trim() || !d.value) return;
+    events.push({ title: t.value.trim(), date: d.value });
+    t.value = ''; d.value = ''; renderEvents();
+  });
+
+  // ---------- 타이머 ----------
+  let mode = 'study', running = false, timerId = null, lastTick = 0, lastSave = 0, lastMinute = -1, audio = null;
+  let overtime = false, overtimeMs = 0;
+  const modeMs = () => (mode === 'study' ? settings.focus : settings.brk) * 60000;
+  let remainingMs = modeMs();
+
+  function renderTimer() {
+    const secs = overtime ? Math.floor(overtimeMs / 1000) : Math.max(0, Math.ceil(remainingMs / 1000));
+    const txt = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+    $('timer-display').textContent = (overtime ? '+' : '') + txt;
+    $('timer-display').classList.toggle('text-indigo-600', overtime);
+    $('overtime-note').classList.toggle('hidden', !overtime);
+    document.title = running ? `${txt} · 학습 포털` : '나만의 학습 포털 & 랭킹';
+    $('timer-icon').textContent = running ? '⏸' : '▶';
+    $('timer-btn-text').textContent = running ? '일시정지' : '시작';
+    $('mode-study').className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition ' + (mode === 'study' ? 'tab-on' : 'tab-off');
+    $('mode-break').className = 'px-4 py-1.5 rounded-full text-xs font-semibold transition ' + (mode === 'break' ? 'tab-on' : 'tab-off');
+    $('mode-study').textContent = `집중 (${settings.focus}분)`;
+    $('mode-break').textContent = `휴식 (${settings.brk}분)`;
+    renderPending();
+  }
+  function beep() {
+    if (!settings.sound) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audio = audio || new AC();
+      [0, 0.25, 0.5].forEach((t) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; g.gain.value = 0.15;
+        o.connect(g); g.connect(audio.destination);
+        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.15);
+      });
+    } catch (e) {}
+  }
+  function stopLoop() { clearInterval(timerId); timerId = null; running = false; }
+  function tick() {
+    const now = Date.now();
+    let el = Math.max(0, now - lastTick); lastTick = now;
+    let justOvertime = false;
+    if (overtime) {
+      overtimeMs += el;
+    } else {
+      const used = Math.min(el, remainingMs);
+      remainingMs -= used;
+      if (mode === 'study' && remainingMs <= 0) { overtime = true; overtimeMs = el - used; justOvertime = true; }
+      else el = used;
+    }
+    if (mode === 'study' && el > 0) pendingSec += el / 1000;
+    if (now - lastSave > 5000) { saveTime(); lastSave = now; }
+    const m = totalMin() * 10000 + todayMin();
+    if (m !== lastMinute) { lastMinute = m; updateStats(); renderRank(); syncRank(); }
+    updateGoal();
+    if (justOvertime) { beep(); toast('설정한 시간이 끝났어요! 계속 공부하면 초과 시간도 기록돼요. 쉬려면 일시정지 후 저장하세요.'); }
+    if (remainingMs <= 0 && mode !== 'study') {
+      stopLoop(); saveTime(); syncRank(true);
+      const wasStudy = mode === 'study';
+      beep();
+      const gcard = $('game-card'), gameWasOpen = !!(gcard && gcard.open);
+      if (gameWasOpen) gcard.open = false;
+      toast(wasStudy ? '집중 시간이 끝났어요! 저장 버튼을 눌러 랭킹에 기록하세요.' : (gameWasOpen ? '휴식이 끝났어요! 미니게임을 종료했어요. 다시 힘내볼까요?' : '휴식이 끝났어요! 다시 힘내볼까요?'));
+      setMode(wasStudy ? 'break' : 'study');
+      return;
+    }
+    renderTimer();
+  }
+  function setMode(m) { stopLoop(); mode = m; overtime = false; overtimeMs = 0; remainingMs = modeMs();  renderTimer(); }
+  $('mode-study').addEventListener('click', () => setMode('study'));
+  $('mode-break').addEventListener('click', () => setMode('break'));
+  $('timer-toggle').addEventListener('click', () => {
+    if (running) { tick(); stopLoop(); saveTime(); syncRank(); renderTimer(); return; }
+    try { const AC = window.AudioContext || window.webkitAudioContext; audio = audio || new AC(); if (audio.resume) audio.resume(); } catch (e) {}
+    lastTick = Date.now(); running = true;
+    timerId = setInterval(tick, 250);
+    renderTimer();
+  });
+  $('timer-reset').addEventListener('click', () => { stopLoop(); overtime = false; overtimeMs = 0; remainingMs = modeMs(); renderTimer(); });
+  function renderPending() {
+    const s = Math.floor(pendingSec);
+    $('pending-box').classList.toggle('hidden', s < 1);
+    const m = Math.floor(s / 60), sec = s % 60;
+    $('pending-time').textContent = m ? `${m}분 ${sec}초` : `${sec}초`;
+    $('save-time').disabled = running;
+    $('pending-hint').textContent = running ? '타이머를 일시정지하면 저장할 수 있어요.' : '저장하면 오늘·누적 시간과 랭킹에 반영돼요.';
+  }
+  function savePending() {
+    if (running || pendingSec < 1) return;
+    const saved = Math.floor(pendingSec);
+    addSubject(pickCategory('save-subject', 'save-custom'), pendingSec);
+    addStudy(pendingSec);
+    pendingSec = 0;
+    saveTime(); updateStats(); renderRank(); syncRank(true); renderPending();
+    const m = Math.floor(saved / 60), s = saved % 60;
+    toast(`${m ? m + '분 ' : ''}${s}초가 저장되어 랭킹에 반영됐어요!`);
+  }
+  $('save-time').addEventListener('click', savePending);
+  window.addEventListener('pagehide', () => { if (running) tick(); saveTime(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveTime(); });
+
+  // ---------- 설정 ----------
+  function clampInt(v, lo, hi, d) { v = parseInt(v, 10); if (isNaN(v)) return d; return Math.min(hi, Math.max(lo, v)); }
+  $('set-focus').value = settings.focus; $('set-break').value = settings.brk;
+  $('set-goal').value = settings.goal; $('set-sound').checked = !!settings.sound;
+  function onSettings() {
+    settings.focus = clampInt($('set-focus').value, 1, 120, 25);
+    settings.brk = clampInt($('set-break').value, 1, 60, 5);
+    settings.goal = clampInt($('set-goal').value, 10, 1440, 120);
+    settings.sound = $('set-sound').checked;
+    lsSet('study_settings', settings);
+    if (!running) remainingMs = modeMs();
+    renderTimer(); updateGoal();
+  }
+  ['set-focus', 'set-break', 'set-goal'].forEach(id => $(id).addEventListener('change', onSettings));
+  $('set-sound').addEventListener('change', onSettings);
+
+  // ---------- 통계 ----------
+  function updateGoal() {
+    const min = today.sec / 60;
+    $('goal-text').textContent = `${Math.floor(min)} / ${settings.goal}분`;
+    $('goal-bar').style.width = Math.min(100, (min / settings.goal) * 100) + '%';
+  }
+  function updateStats() {
+    const done = todos.filter(t => t.completed).length;
+    $('todo-stats').textContent = `${done} / ${todos.length}`;
+    $('today-study').textContent = fmt(todayMin());
+    $('total-study-time').textContent = fmt(totalMin());
+    $('streak-stat').textContent = streak() + '일';
+    renderSubjectStats();
+    updateGoal();
+  }
+
+  // ---------- 시작 ----------
+  if (nick) showNick();
+  authModal.classList.remove('hidden');
+  renderTodos(); renderMaterials(); renderEvents(); renderTimer(); updateStats();
+  renderRank();
+  try {
+    const clockFmt = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+    const renderClock = () => { $('seoul-clock').textContent = clockFmt.format(new Date()); };
+    renderClock(); setInterval(renderClock, 1000);
+  } catch (e) {}
+  // ---------- 쉬는 시간 미니게임 ----------
+  (function () {
+    const best = lsGet('study_game_best', {}) || {};
+    const saveBest = () => lsSet('study_game_best', best);
+    const tabR = $('g-tab-react'), tabN = $('g-tab-num'), tabM = $('g-tab-mine'), tabM2 = $('g-tab-mine2');
+    function showTab(which) {
+      $('g-react').classList.toggle('hidden', which !== 'react');
+      $('g-num').classList.toggle('hidden', which !== 'num');
+      $('g-mine').classList.toggle('hidden', which !== 'mine' && which !== 'mine2');
+      tabR.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'react' ? 'tab-on' : 'tab-off');
+      tabN.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'num' ? 'tab-on' : 'tab-off');
+      tabM.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine' ? 'tab-on' : 'tab-off');
+      tabM2.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine2' ? 'tab-on' : 'tab-off');
+      if (which !== 'num') stopRun(); else if (!run) draw();
+      curTab = which; renderGameRank();
+      if (which === 'mine' || which === 'mine2') { if (which !== curMine) { setMineMode(which); mNew(); } else mResume(); } else mPause();
+    }
+    tabR.addEventListener('click', () => showTab('react'));
+    tabN.addEventListener('click', () => showTab('num'));
+    tabM.addEventListener('click', () => showTab('mine'));
+    tabM2.addEventListener('click', () => showTab('mine2'));
+
+    // 1) 반응속도: 초록색이 되면 최대한 빨리 누르기
+    const box = $('react-box'), rmsg = $('react-msg');
+    let rState = 'idle', rTimer = null, rStart = 0;
+    function rSet(bg, text) { box.style.background = bg; box.style.color = '#fff'; box.textContent = text; }
+    function rBest() { rmsg.textContent = best.react ? '최고 기록: ' + best.react + 'ms' : '빨간 화면이 초록색으로 바뀔 때 바로 누르세요!'; }
+    box.addEventListener('click', () => {
+      if (rState === 'idle') {
+        rState = 'wait'; rSet('#ef4444', '초록색이 되면 누르세요…');
+        rTimer = setTimeout(() => { rState = 'go'; rStart = performance.now(); rSet('#10b981', '지금 누르세요!'); }, 1500 + Math.random() * 2500);
+      } else if (rState === 'wait') {
+        clearTimeout(rTimer); rState = 'idle'; rSet('#64748b', '너무 빨랐어요! 다시 눌러 시작');
+      } else if (rState === 'go') {
+        const ms = Math.round(performance.now() - rStart);
+        rState = 'idle';
+        let txt = ms + 'ms'; recordDaily('react', ms);
+        if (!best.react || ms < best.react) { best.react = ms; saveBest(); txt += ' 🎉 최고 기록!'; }
+        rSet('#6366f1', txt + ' · 다시 눌러 시작'); rBest();
+      }
+    });
+    rSet('#6366f1', '눌러서 시작'); rBest();
+
+    // 2) 점프 달리기: 장애물을 넘으며 최대한 멀리! 갈수록 빨라지고 어려워져요
+    const cv = $('run-canvas'), ctx = cv.getContext('2d');
+    const W = 320, H = 140, GROUND = 112, SIZE = 18;
+    cv.width = W * 2; cv.height = H * 2; ctx.scale(2, 2);
+    const nmsg = $('num-msg'), nstart = $('num-start');
+    let run = null, raf = 0;
+    const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const colorsNow = () => ({ bg: css('--surface2') || '#f1f5f9', line: css('--t5') || '#94a3b8', ink: css('--t1') || '#1e293b', me: '#6366f1', ob: '#f59e0b' });
+    const bestText = () => (best.run ? ' · 최고 ' + best.run + 'm' : '');
+
+    function draw() {
+      const r = run || { y: GROUND - SIZE, obstacles: [], dist: 0, colors: colorsNow() };
+      const c = r.colors;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = c.bg; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = c.line; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, GROUND + 1); ctx.lineTo(W, GROUND + 1); ctx.stroke();
+      ctx.lineWidth = 1;
+      for (let x = -(r.dist % 28); x < W; x += 28) { ctx.beginPath(); ctx.moveTo(x, GROUND + 9); ctx.lineTo(x + 8, GROUND + 9); ctx.stroke(); }
+      ctx.fillStyle = c.ob;
+      r.obstacles.forEach((o) => { ctx.fillRect(o.x, GROUND - o.h, o.w, o.h); });
+      ctx.fillStyle = c.me; ctx.fillRect(40, r.y, SIZE, SIZE);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(40 + 11, r.y + 4, 4, 4);
+      ctx.fillStyle = c.ink; ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'left'; ctx.fillText(Math.floor(r.dist / 12) + 'm', 10, 22);
+      if (best.run) { ctx.textAlign = 'right'; ctx.fillText('최고 ' + best.run + 'm', W - 10, 22); }
+      ctx.textAlign = 'center';
+      if (!run) ctx.fillText('탭해서 시작!', W / 2, 62);
+      else if (run.over) ctx.fillText('💥 게임 오버', W / 2, 62);
+      ctx.textAlign = 'left';
+    }
+    function startRun() {
+      cancelAnimationFrame(raf);
+      run = { y: GROUND - SIZE, vy: 0, onGround: true, obstacles: [], dist: 0, speed: 3.4, gap: 120, nextO: null, over: false, overAt: 0, last: 0, colors: colorsNow() };
+      nmsg.textContent = '탭·스페이스로 점프! 갈수록 장애물이 높고 넓어져요' + bestText();
+      nstart.textContent = '다시 시작';
+      raf = requestAnimationFrame((t) => { run.last = t; loop(t); });
+    }
+    function endRun() {
+      run.over = true; run.overAt = performance.now();
+      const m = Math.floor(run.dist / 12);
+      let t = m + 'm 달렸어요!'; recordDaily('run', m);
+      if (!best.run || m > best.run) { best.run = m; saveBest(); t += ' 🎉 최고 기록!'; }
+      nmsg.textContent = t;
+      draw();
+    }
+    // 점프 물리: 한 번 뛰었을 때 장애물 위에 머무는 시간이 정해져 있어서, 높고 넓은 장애물일수록 점프 타이밍이 정확해야 해요
+    const VJ = 9.6, GR = 0.58, PW = 12;
+    const airA = (h) => (VJ - Math.sqrt(Math.max(0, VJ * VJ - 2 * GR * h))) / GR;
+    function genObstacle(m, speed) {
+      const d = Math.min(1, m / 1000);
+      let w = 10 + Math.random() * 8 + d * Math.random() * 30;
+      let h = Math.min(70, 16 + Math.random() * 12 + d * (10 + Math.random() * 38));
+      const minWin = 16 - 10 * d;                          // 점프 가능한 타이밍 폭(프레임): 갈수록 좁아져요
+      const win = () => (2 * Math.sqrt(Math.max(0, VJ * VJ - 2 * GR * h))) / GR - (w + PW) / speed;
+      while (win() < minWin && w > 10) w -= 2;
+      while (win() < minWin && h > 16) h -= 2;
+      return { w: w, h: h };
+    }
+    function loop(now) {
+      if (!run || run.over) return;
+      const r = run;
+      const dt = Math.min(2.5, Math.max(0, (now - r.last) / 16.667)); r.last = now;
+      const m = r.dist / 12;
+      r.speed = 3.4 + Math.min(1, m / 1000) * 1.8;            // 멀리 갈수록 빨라져요
+      const scroll = r.speed * dt;
+      r.dist += scroll; r.gap -= scroll;
+      r.obstacles.forEach((o) => { o.x -= scroll; });
+      r.obstacles = r.obstacles.filter((o) => o.x + o.w > -10);
+      if (r.gap <= 0) {
+        const cur = r.nextO || genObstacle(m, r.speed);
+        r.nextO = genObstacle(m, r.speed);
+        r.obstacles.push({ x: W + 10, w: cur.w, h: cur.h });
+        // 착지 후 다시 뛸 수 있는 최소한의 거리만 남겨요 (갈수록 여유가 줄어요)
+        r.gap = cur.w + r.speed * (airA(cur.h) + airA(r.nextO.h) + 24 - 18 * Math.min(1, m / 1000));
+      }
+      r.vy += 0.58 * dt; r.y += r.vy * dt;
+      if (r.y >= GROUND - SIZE) { r.y = GROUND - SIZE; r.vy = 0; r.onGround = true; }
+      const px = 43, py = r.y + 3, pw = SIZE - 6, ph = SIZE - 6;
+      for (const o of r.obstacles) {
+        if (px < o.x + o.w && px + pw > o.x && py < GROUND && py + ph > GROUND - o.h) { endRun(); return; }
+      }
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    function jump() { if (run && !run.over && run.onGround) { run.vy = -9.6; run.onGround = false; } }
+    function stopRun() {
+      cancelAnimationFrame(raf); run = null; draw();
+      nmsg.textContent = '탭하거나 스페이스를 눌러 점프! 장애물을 피해 멀리 가세요' + bestText();
+      nstart.textContent = '시작';
+    }
+
+    cv.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!run) startRun();
+      else if (run.over) { if (performance.now() - run.overAt > 600) startRun(); }
+      else jump();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space' && e.code !== 'ArrowUp') return;
+      if (!run || run.over || $('g-num').classList.contains('hidden') || !$('game-card').open) return;
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      e.preventDefault(); jump();
+    });
+    // 3) 지뢰찾기 (중: 12x12 지뢰 22개 / 상: 16x18 지뢰 58개) - 첫 칸은 항상 안전해요
+    let MR = 12, MC = 12, MN = 22;
+    const MODES = {
+      mine: { r: 12, c: 12, n: 22, kind: 'sweep', bestKey: 'sweepM' },
+      mine2: { r: 18, c: 16, n: 58, kind: 'sweepH', bestKey: 'sweepH' }
+    };
+    let curMine = 'mine';
+    function setMineMode(w) { const m = MODES[w]; MR = m.r; MC = m.c; MN = m.n; curMine = w; }
+    const mGrid = $('mine-grid'), mLeft = $('mine-left'), mTime = $('mine-time'), mMsg = $('mine-msg'), mFlagBtn = $('mine-flag');
+    const NUM_COLORS = ['', '#2563eb', '#16a34a', '#dc2626', '#7c3aed', '#b45309', '#0891b2', '#334155', '#64748b'];
+    let sw = null, mTimer = null, flagMode = false, lpTimer = null, lpDone = false;
+    const nbrs = (i) => {
+      const r = Math.floor(i / MC), c = i % MC, out = [];
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const rr = r + dr, cc = c + dc;
+        if (rr >= 0 && rr < MR && cc >= 0 && cc < MC) out.push(rr * MC + cc);
+      }
+      return out;
+    };
+    function mineStop() { clearInterval(mTimer); mTimer = null; }
+    function tickMine() { if (sw && sw.started && !sw.over) mTime.textContent = '⏱ ' + Math.floor((performance.now() - sw.t0) / 1000) + '초'; }
+    function mPause() { if (sw && sw.started && !sw.over && mTimer) { mineStop(); sw.pauseAt = performance.now(); } }
+    function mResume() { if (sw && sw.started && !sw.over && !mTimer && sw.pauseAt) { sw.t0 += performance.now() - sw.pauseAt; sw.pauseAt = 0; mTimer = setInterval(tickMine, 250); } }
+    function mNew() {
+      mineStop();
+      mGrid.style.gridTemplateColumns = 'repeat(' + MC + ',minmax(0,1fr))';
+      sw = { cells: [], started: false, over: false, lost: false, revealed: 0, flags: 0, t0: 0, pauseAt: 0 };
+      for (let i = 0; i < MR * MC; i++) sw.cells.push({ mine: false, open: false, flag: false, hit: false, n: 0 });
+      mTime.textContent = '⏱ 0초';
+      mMsg.textContent = MC + '×' + MR + ' · 지뢰 ' + MN + '개 · 눌러서 열어요 · 깃발: 🚩모드/길게 누르기/우클릭 · 숫자를 누르면 주변을 한꺼번에 열어요' + (best[MODES[curMine].bestKey] ? ' · 최고 ' + best[MODES[curMine].bestKey] + '초' : '');
+      mRender();
+    }
+    function mPlace(safe) {
+      const bad = new Set([safe].concat(nbrs(safe)));
+      let placed = 0;
+      while (placed < MN) {
+        const i = Math.floor(Math.random() * MR * MC);
+        if (bad.has(i) || sw.cells[i].mine) continue;
+        sw.cells[i].mine = true; placed++;
+      }
+      sw.cells.forEach((c, i) => { c.n = nbrs(i).filter((j) => sw.cells[j].mine).length; });
+    }
+    function mOpen(i) {
+      const stack = [i];
+      while (stack.length) {
+        const k = stack.pop(), c = sw.cells[k];
+        if (c.open || c.flag) continue;
+        c.open = true; sw.revealed++;
+        if (c.n === 0 && !c.mine) nbrs(k).forEach((j) => { if (!sw.cells[j].open) stack.push(j); });
+      }
+    }
+    function mLose(msg) {
+      sw.over = true; sw.lost = true; mineStop();
+      sw.cells.forEach((x) => { if (x.mine && !x.flag) x.open = true; });
+      mMsg.textContent = msg;
+    }
+    function mWin() {
+      sw.over = true; mineStop();
+      const sec = Math.max(3, Math.round((performance.now() - sw.t0) / 1000));
+      sw.cells.forEach((x) => { if (x.mine) x.flag = true; });
+      sw.flags = MN;
+      let msg = '🎉 클리어! ' + sec + '초';
+      const bk = MODES[curMine].bestKey;
+      if (!best[bk] || sec < best[bk]) { best[bk] = sec; saveBest(); msg += ' · 최고 기록!'; }
+      mMsg.textContent = msg; mTime.textContent = '⏱ ' + sec + '초';
+      recordDaily(MODES[curMine].kind, sec);
+    }
+    // 숫자 칸 누르기: 주변 깃발 수가 숫자와 같으면 나머지 칸을 한꺼번에 열어요 (깃발을 잘못 꽂았다면 실패!)
+    function mChord(i) {
+      const c = sw.cells[i], ns = nbrs(i);
+      if (ns.filter((j) => sw.cells[j].flag).length !== c.n) return;
+      let boom = false;
+      ns.forEach((j) => {
+        const x = sw.cells[j];
+        if (x.flag || x.open) return;
+        if (x.mine) { x.hit = true; x.open = true; boom = true; } else mOpen(j);
+      });
+      if (boom) mLose('💥 깃발을 잘못 꽂았어요! 새 게임을 눌러보세요');
+      else if (sw.revealed === MR * MC - MN) mWin();
+      mRender();
+    }
+    function mClick(i, flagIt) {
+      if (!sw || sw.over) return;
+      const c = sw.cells[i];
+      if (c.open) { if (c.n > 0 && !c.mine) mChord(i); return; }
+      if (flagIt) { c.flag = !c.flag; sw.flags += c.flag ? 1 : -1; mRender(); return; }
+      if (c.flag) return;
+      if (!sw.started) { sw.started = true; mPlace(i); sw.t0 = performance.now(); mTimer = setInterval(tickMine, 250); }
+      if (c.mine) { c.hit = true; c.open = true; mLose('💥 지뢰를 밟았어요! 새 게임을 눌러보세요'); mRender(); return; }
+      mOpen(i);
+      if (sw.revealed === MR * MC - MN) mWin();
+      mRender();
+    }
+    function mRender() {
+      mGrid.innerHTML = '';
+      sw.cells.forEach((c, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.dataset.i = i;
+        let cls = 'aspect-square rounded-md ' + (MC > 12 ? 'text-xs' : 'text-sm') + ' font-black flex items-center justify-center select-none ';
+        let txt = '';
+        if (c.open) {
+          if (c.mine) { cls += c.hit ? 'bg-red-500 text-white' : 'bg-slate-200'; txt = '💣'; }
+          else { cls += 'bg-slate-100'; if (c.n) { txt = String(c.n); b.style.color = NUM_COLORS[c.n]; } }
+        } else if (c.flag && sw.lost && !c.mine) { cls += 'bg-slate-100'; txt = '❌'; }
+        else { cls += 'text-slate-700'; b.style.background = 'var(--ti-line)'; txt = c.flag ? '🚩' : ''; }
+        b.className = cls; b.textContent = txt;
+        mGrid.appendChild(b);
+      });
+      mLeft.textContent = '💣 ' + (MN - sw.flags);
+    }
+    mGrid.addEventListener('pointerdown', (e) => {
+      lpDone = false; clearTimeout(lpTimer);
+      const b = e.target.closest('[data-i]');
+      if (!b || e.pointerType !== 'touch') return;
+      lpTimer = setTimeout(() => { lpDone = true; mClick(+b.dataset.i, true); }, 450);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => mGrid.addEventListener(ev, () => clearTimeout(lpTimer)));
+    mGrid.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-i]');
+      if (!b) return;
+      if (lpDone) { lpDone = false; return; }
+      mClick(+b.dataset.i, flagMode);
+    });
+    mGrid.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (lpDone) return;
+      const b = e.target.closest('[data-i]');
+      if (b) mClick(+b.dataset.i, true);
+    });
+    mFlagBtn.addEventListener('click', () => {
+      flagMode = !flagMode;
+      mFlagBtn.textContent = '🚩 깃발 모드 ' + (flagMode ? 'ON' : 'OFF');
+      mFlagBtn.style.background = flagMode ? '#6366f1' : '';
+      mFlagBtn.style.color = flagMode ? '#ffffff' : '';
+    });
+    $('mine-start').addEventListener('click', mNew);
+    mNew();
+
+    // ---------- 오늘의 미니게임 랭킹 (하루만 유지, 서울 기준 자정에 초기화) ----------
+    let curTab = 'react', gameDocs = [];
+    const todayK = () => seoulKey(new Date(Date.now() + 9 * 3600 * 1000));
+    let mine = lsGet('study_game_today', null);
+    if (!mine || typeof mine !== 'object' || mine.day !== todayK()) mine = { day: todayK(), react: 0, run: 0, sweep: 0, sweepH: 0 };
+    const valid = (k, v) => (k === 'react' ? (v >= 50 && v <= 5000) : (k === 'sweep' || k === 'sweepH') ? (v >= 3 && v <= 3600) : (v >= 1 && v <= 100000));
+    const isBetter = (k, a, b) => (k === 'run' ? a > b : a < b);
+    let allT = lsGet('study_game_all', null);
+    if (!allT || typeof allT !== 'object') allT = {};
+    const seedBest = { react: best.react, run: best.run, sweep: best.sweepM, sweepH: best.sweepH };
+    ['react', 'run', 'sweep', 'sweepH'].forEach((k) => { if (!allT[k] && valid(k, Number(seedBest[k]))) allT[k] = { v: Number(seedBest[k]), d: '' }; });
+    function recordDaily(kind, v) {
+      const day = todayK();
+      if (mine.day !== day) mine = { day: day, react: 0, run: 0, sweep: 0, sweepH: 0 };
+      const cur = mine[kind];
+      const better = kind === 'run' ? v > cur : (!cur || v < cur);
+      if (!better || !valid(kind, v)) return;
+      mine[kind] = v; lsSet('study_game_today', mine);
+      if (!allT[kind] || isBetter(kind, v, allT[kind].v)) { allT[kind] = { v: v, d: day }; lsSet('study_game_all', allT); }
+      renderGameRank();
+      if (cloud.db && cloud.uid && nick && cloud.canWrite) {
+        Promise.resolve(cloud.db.doc('games/' + cloud.uid).set({ nick: nick, day: day, react: mine.react || 0, run: mine.run || 0, sweep: mine.sweep || 0, sweepH: mine.sweepH || 0, all: allT })).catch(() => {});
+      }
+    }
+    function renderGameRank() {
+      const box = $('game-rank');
+      if (!box) return;
+      const day = todayK();
+      const kind = curTab === 'react' ? 'react' : curTab === 'mine' ? 'sweep' : curTab === 'mine2' ? 'sweepH' : 'run';
+      const label = kind === 'react' ? '반응속도' : kind === 'sweep' ? '지뢰찾기' : kind === 'sweepH' ? '지뢰찾기(상)' : '점프 달리기';
+      const unit = (v) => (kind === 'react' ? v + 'ms' : (kind === 'sweep' || kind === 'sweepH') ? v + '초' : v + 'm');
+      const rows = [];
+      gameDocs.forEach((d) => {
+        if (d.day !== day) return;
+        const v = Number(d[kind]) || 0;
+        if (valid(kind, v)) rows.push({ id: d.id, nick: String(d.nick || '이름없음').slice(0, 16), v: v });
+      });
+      const meId = cloud.uid || 'me';
+      if (nick && mine.day === day && valid(kind, mine[kind])) {
+        const ex = rows.find((r) => r.id === meId);
+        if (!ex) rows.push({ id: meId, nick: nick, v: mine[kind] });
+        else ex.v = kind === 'run' ? Math.max(ex.v, mine[kind]) : Math.min(ex.v, mine[kind]);
+      }
+      rows.sort((a, b) => (kind === 'run' ? b.v - a.v : a.v - b.v));
+      const medals = ['🥇', '🥈', '🥉'];
+      const cand = [];
+      gameDocs.forEach((d) => {
+        const a = d.all && d.all[kind], v = a ? Number(a.v) : 0;
+        if (a && valid(kind, v)) cand.push({ id: d.id, nick: String(d.nick || '이름없음').slice(0, 16), v: v, d: String(a.d || '') });
+      });
+      if (nick && allT[kind]) {
+        const ex = cand.find((c) => c.id === meId);
+        if (!ex) cand.push({ id: meId, nick: nick, v: allT[kind].v, d: allT[kind].d });
+        else if (isBetter(kind, allT[kind].v, ex.v)) { ex.v = allT[kind].v; ex.d = allT[kind].d; }
+      }
+      cand.sort((a, b) => (kind === 'run' ? b.v - a.v : a.v - b.v));
+      const king = cand[0];
+      const sd = (d) => { const p = d.split('-'); return p.length === 3 ? Number(p[1]) + '/' + Number(p[2]) : ''; };
+      let hofHtml = '<div class="mb-3 p-2.5 rounded-xl bg-indigo-50"><p class="text-[11px] font-bold text-indigo-700 mb-1">🏆 명예의 전당 · ' + label + '</p>';
+      hofHtml += king
+        ? '<p class="text-xs text-slate-700 flex items-center justify-between gap-2"><span class="truncate">👑 ' + esc(king.nick) + (king.id === meId ? ' (나)' : '') + '</span><span class="font-bold whitespace-nowrap">' + unit(king.v) + (king.d ? ' <span class="font-normal text-slate-400">· ' + sd(king.d) + '</span>' : '') + '</span></p>'
+        : '<p class="text-xs text-slate-400">아직 기록이 없어요. 첫 1등이 되어보세요!</p>';
+      hofHtml += '</div>';
+      let html = hofHtml + '<p class="text-xs font-bold text-slate-800 mb-1.5">🏅 오늘의 ' + label + ' 랭킹</p>';
+      if (!rows.length) html += '<p class="text-xs text-slate-400">아직 기록이 없어요. 첫 기록을 남겨보세요!</p>';
+      else html += rows.slice(0, 5).map((r, i) => '<div class="flex items-center justify-between text-xs px-2 py-1 rounded-lg ' + (r.id === meId ? 'bg-indigo-50 font-bold text-indigo-900' : 'text-slate-700') + '"><span class="truncate">' + (medals[i] || (i + 1)) + ' ' + esc(r.nick) + (r.id === meId ? ' (나)' : '') + '</span><span class="font-semibold whitespace-nowrap">' + unit(r.v) + '</span></div>').join('');
+      if (!cloud.db) html += '<p class="text-[11px] text-slate-400 mt-1">Firebase 설정 후 스터디원 기록이 공유돼요.</p>'; 
+      box.innerHTML = html;
+    }
+    let pushAll = false;
+    function mergeAll(my) {
+      if (my && my.all && typeof my.all === 'object') {
+        ['react', 'run', 'sweep', 'sweepH'].forEach((k) => {
+          const a = my.all[k], v = a ? Number(a.v) : 0;
+          if (a && valid(k, v) && (!allT[k] || isBetter(k, v, allT[k].v))) allT[k] = { v: v, d: String(a.d || '') };
+        });
+        lsSet('study_game_all', allT);
+      }
+      if (pushAll || !nick || !cloud.canWrite || !cloud.db || !cloud.uid) return;
+      const need = ['react', 'run', 'sweep', 'sweepH'].some((k) => {
+        if (!allT[k]) return false;
+        const a = my && my.all ? my.all[k] : null, cv = a ? Number(a.v) : 0;
+        return !a || !valid(k, cv) || isBetter(k, allT[k].v, cv);
+      });
+      if (!need) return;
+      pushAll = true;
+      Promise.resolve(cloud.db.doc('games/' + cloud.uid).set({ nick: nick, day: mine.day, react: mine.react || 0, run: mine.run || 0, sweep: mine.sweep || 0, sweepH: mine.sweepH || 0, all: allT }))
+        .catch(() => {}).then(() => { setTimeout(() => { pushAll = false; }, 5000); });
+    }
+    function subscribeGames() {
+      try {
+        cloud.db.collection('games').limit(100).onSnapshot((snap) => {
+          gameDocs = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+          const my = gameDocs.find((d) => d.id === cloud.uid);
+          mergeAll(my);
+          const day = todayK();
+          if (my && my.day === day) {
+            if (mine.day !== day) mine = { day: day, react: 0, run: 0, sweep: 0, sweepH: 0 };
+            const r = Number(my.react) || 0, u = Number(my.run) || 0;
+            if (valid('react', r) && (!mine.react || r < mine.react)) mine.react = r;
+            if (valid('run', u) && u > mine.run) mine.run = u;
+            const s = Number(my.sweep) || 0;
+            if (valid('sweep', s) && (!mine.sweep || s < mine.sweep)) mine.sweep = s;
+            const sh = Number(my.sweepH) || 0;
+            if (valid('sweepH', sh) && (!mine.sweepH || sh < mine.sweepH)) mine.sweepH = sh;
+            lsSet('study_game_today', mine);
+          }
+          renderGameRank();
+        }, () => {});
+      } catch (e) {}
+    }
+    let gTries = 0;
+    const gIv = setInterval(() => {
+      gTries++;
+      if (cloud.db && cloud.uid) { clearInterval(gIv); subscribeGames(); }
+      else if (gTries > 40) clearInterval(gIv);
+    }, 1000);
+    setInterval(renderGameRank, 60000);
+    renderGameRank();
+
+    nstart.addEventListener('click', () => { startRun(); nstart.blur(); });
+    $('game-card').addEventListener('toggle', () => { if (!$('game-card').open) { stopRun(); mPause(); } else if (curTab === 'mine' || curTab === 'mine2') mResume(); });
+    // 모바일에서는 미니게임을 열면 화면 가득 크게 보여요
+    const gc = $('game-card'), gmq = window.matchMedia('(max-width: 1023px)');
+    function applyFull() {
+      const full = gc.open;
+      gc.classList.toggle('game-full', full);
+      document.body.style.overflow = full ? 'hidden' : '';
+      if (full) gc.scrollTop = 0;
+    }
+    gc.addEventListener('toggle', applyFull);
+    if (gmq.addEventListener) gmq.addEventListener('change', applyFull);
+    nmsg.textContent = '탭하거나 스페이스를 눌러 점프! 장애물을 피해 멀리 가세요' + bestText();
+    draw();
+  })();
+
+  setInterval(renderRank, 15000);
+  renderGallery(); updatePostUI(); renderCertCal();
+  initCloud();
+})();
+</script>
+</body>
+</html>
