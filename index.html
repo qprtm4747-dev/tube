@@ -368,6 +368,19 @@
   <p>열심히 공부하는 당신을 응원합니다! ✨</p>
 </footer>
 
+<!-- 미니게임 휴식 타이머 안내 팝업 -->
+<div id="rest-popup" class="hidden" style="position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:1rem;padding:1.5rem;max-width:20rem;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);">
+    <div style="font-size:2.2rem;line-height:1;">⏰</div>
+    <p style="font-weight:800;font-size:1.1rem;color:#1e293b;margin:.75rem 0 .25rem;">휴식 타이머를 켜주세요!!</p>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:1.1rem;">미니게임은 쉬는 시간에만 즐겨요.</p>
+    <div style="display:flex;gap:.5rem;">
+      <button id="rest-popup-start" style="flex:1;background:#4f46e5;color:#fff;font-weight:700;font-size:.85rem;padding:.6rem;border-radius:.75rem;">휴식 타이머 켜기</button>
+      <button id="rest-popup-close" style="flex:1;background:#f1f5f9;color:#475569;font-weight:700;font-size:.85rem;padding:.6rem;border-radius:.75rem;">닫기</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -511,7 +524,6 @@
       synced = { total: total, today: td, totalS: totalS, todayS: todayS, stk: stk, day: day, nick: nick };
     } catch (e) {
       lastFail = Date.now();
-      console.error('랭킹 저장 실패:', e);
       if (e && e.code === 'invalid_argument') { cloud.canWrite = false; renderRank(); }
       else if (e && e.code === 'quota_exceeded') { toast('랭킹 저장 공간이 가득 차서 기록을 올리지 못했어요.'); }
     }
@@ -1563,7 +1575,7 @@
     function startRun() {
       cancelAnimationFrame(raf);
       run = { y: GROUND - SIZE, vy: 0, onGround: true, obstacles: [], dist: 0, speed: 3.4, gap: 120, nextO: null, over: false, overAt: 0, last: 0, colors: colorsNow() };
-      nmsg.textContent = '탭·스페이스로 점프! 갈수록 장애물이 높고 넓어져요' + bestText();
+      nmsg.textContent = '탭·스페이스로 점프! 한 번만 누르면 넘을 수 있어요 (갈수록 빨라져요)' + bestText();
       nstart.textContent = '다시 시작';
       raf = requestAnimationFrame((t) => { run.last = t; loop(t); });
     }
@@ -1578,14 +1590,16 @@
     // 점프 물리: 한 번 뛰었을 때 장애물 위에 머무는 시간이 정해져 있어서, 높고 넓은 장애물일수록 점프 타이밍이 정확해야 해요
     const VJ = 9.6, GR = 0.58, PW = 12;
     const airA = (h) => (VJ - Math.sqrt(Math.max(0, VJ * VJ - 2 * GR * h))) / GR;
-    function genObstacle(m, speed) {
+    // 어떤 속도에서도 점프 한 번으로 반드시 넘을 수 있도록, 가장 빠른 속도(MAXSP) 기준으로 장애물 크기를 제한해요
+    const MAXSP = 5.2, MINWIN = 19;
+    const FULLAIR = (2 * VJ) / GR;                          // 평지에서 점프해서 착지할 때까지 걸리는 프레임
+    function genObstacle(m) {
       const d = Math.min(1, m / 1000);
-      let w = 10 + Math.random() * 8 + d * Math.random() * 30;
-      let h = Math.min(70, 16 + Math.random() * 12 + d * (10 + Math.random() * 38));
-      const minWin = 16 - 10 * d;                          // 점프 가능한 타이밍 폭(프레임): 갈수록 좁아져요
-      const win = () => (2 * Math.sqrt(Math.max(0, VJ * VJ - 2 * GR * h))) / GR - (w + PW) / speed;
-      while (win() < minWin && w > 10) w -= 2;
-      while (win() < minWin && h > 16) h -= 2;
+      let w = 10 + Math.random() * 8 + d * Math.random() * 20;
+      let h = Math.min(44, 16 + Math.random() * 12 + d * (8 + Math.random() * 20));
+      const win = () => (2 * Math.sqrt(Math.max(0, VJ * VJ - 2 * GR * h))) / GR - (w + PW) / MAXSP;
+      while (win() < MINWIN && w > 10) w -= 2;
+      while (win() < MINWIN && h > 16) h -= 2;
       return { w: w, h: h };
     }
     function loop(now) {
@@ -1602,8 +1616,8 @@
         const cur = r.nextO || genObstacle(m, r.speed);
         r.nextO = genObstacle(m, r.speed);
         r.obstacles.push({ x: W + 10, w: cur.w, h: cur.h });
-        // 착지 후 다시 뛸 수 있는 최소한의 거리만 남겨요 (갈수록 여유가 줄어요)
-        r.gap = cur.w + r.speed * (airA(cur.h) + airA(r.nextO.h) + 24 - 18 * Math.min(1, m / 1000));
+        // 점프 한 번 하고 착지한 뒤 여유 있게 다음 장애물을 준비할 수 있도록 간격을 충분히 벌려요 (연타 불필요)
+        r.gap = cur.w + r.speed * (FULLAIR + airA(r.nextO.h) + 16 + Math.random() * 20);
       }
       r.vy += 0.58 * dt; r.y += r.vy * dt;
       if (r.y >= GROUND - SIZE) { r.y = GROUND - SIZE; r.vy = 0; r.onGround = true; }
@@ -1904,6 +1918,19 @@
       if (full) gc.scrollTop = 0;
     }
     gc.addEventListener('toggle', applyFull);
+    // 미니게임을 열었는데 휴식 타이머가 꺼져 있으면 안내 팝업을 띄워요
+    const restPopup = $('rest-popup');
+    const showRestPopup = () => { restPopup.style.display = 'flex'; };
+    const hideRestPopup = () => { restPopup.style.display = 'none'; };
+    gc.addEventListener('toggle', () => {
+      if (gc.open && !(mode === 'break' && running)) showRestPopup(); else hideRestPopup();
+    });
+    $('rest-popup-close').addEventListener('click', hideRestPopup);
+    $('rest-popup-start').addEventListener('click', () => {
+      $('mode-break').click();
+      if (!running) $('timer-toggle').click();
+      hideRestPopup();
+    });
     if (gmq.addEventListener) gmq.addEventListener('change', applyFull);
     nmsg.textContent = '탭하거나 스페이스를 눌러 점프! 장애물을 피해 멀리 가세요' + bestText();
     draw();
@@ -1914,5 +1941,6 @@
   initCloud();
 })();
 </script>
+
 </body>
 </html>
