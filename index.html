@@ -293,6 +293,7 @@
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">🏆</span> 스터디 랭킹</h2>
         <div class="flex gap-1.5">
           <button id="rank-today" class="px-3 py-1 rounded-full text-xs font-semibold tab-on transition">오늘</button>
+          <button id="rank-yest" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">어제</button>
           <button id="rank-total" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">누적</button>
           
         </div>
@@ -474,8 +475,15 @@
   let totalSec = lsGet('study_total_sec', null);
   if (totalSec === null) totalSec = (Number(lsGet('study_total_time', 0)) || 0) * 60;
   totalSec = Number(totalSec) || 0;
+  function yKey() { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); }
+  let yest = lsGet('study_yest', null);
+  if (!yest || typeof yest !== 'object') yest = { day: '', sec: 0 };
   let today = lsGet('study_today', null);
-  if (!today || typeof today !== 'object' || today.day !== dayKey()) today = { day: dayKey(), sec: 0 };
+  function rollToday() {
+    if (today && typeof today === 'object' && today.day === yKey()) { yest = { day: today.day, sec: Math.floor(Number(today.sec) || 0) }; lsSet('study_yest', yest); }
+    today = { day: dayKey(), sec: 0 };
+  }
+  if (!today || typeof today !== 'object' || today.day !== dayKey()) rollToday();
   let days = lsGet('study_days', []);
   if (!Array.isArray(days)) days = [];
   let settings = Object.assign({ focus: 25, brk: 5, goal: 120, sound: true }, lsGet('study_settings', {}) || {});
@@ -486,10 +494,17 @@
   let certDays = lsGet('study_certdays', []);
   if (!Array.isArray(certDays)) certDays = [];
   function saveTime() { lsSet('study_total_sec', totalSec); lsSet('study_today', today); lsSet('study_days', days.slice(-400)); lsSet('study_pending', pendingSec); }
+  function yesterdaySec() {
+    const yk = yKey();
+    let v = yest.day === yk ? Number(yest.sec) || 0 : 0;
+    const sl = subjectLog[yk];
+    if (sl) { const sum = Object.keys(sl).reduce((a, n) => a + (Number(sl[n]) || 0), 0); v = Math.max(v, sum); }
+    return Math.floor(v);
+  }
   function todayMin() { return today.day === dayKey() ? Math.floor(today.sec / 60) : 0; }
   function totalMin() { return Math.floor(totalSec / 60); }
   function addStudy(sec) {
-    if (today.day !== dayKey()) today = { day: dayKey(), sec: 0 };
+    if (today.day !== dayKey()) rollToday();
     totalSec += sec; today.sec += sec;
     if (today.sec >= 60 && !days.includes(today.day)) days.push(today.day);
   }
@@ -506,7 +521,7 @@
   const cloud = { db: null, uid: null, canWrite: true, state: 'loading' };
   let ranks = [];
   let rankTab = 'today';
-  let synced = { total: -1, today: -1, totalS: -1, todayS: -1, day: '', nick: '' };
+  let synced = { total: -1, today: -1, totalS: -1, todayS: -1, yS: -1, day: '', nick: '' };
   let writing = false, dirty = false, lastFail = 0, adopted = false;
 
   async function syncRank(force) {
@@ -515,15 +530,17 @@
     const total = totalMin(), td = todayMin(), day = dayKey();
     const totalS = Math.floor(totalSec), todayS = today.day === day ? Math.floor(today.sec) : 0;
     const stk = streak(), lastD = days.length ? days.slice().sort().pop() : '';
-    if (!force && totalS === synced.totalS && todayS === synced.todayS && stk === synced.stk && day === synced.day && nick === synced.nick) return;
+    const yS = yesterdaySec(), yDay = yKey();
+    if (!force && totalS === synced.totalS && todayS === synced.todayS && yS === synced.yS && stk === synced.stk && day === synced.day && nick === synced.nick) return;
     if (Date.now() - lastFail < 30000) return;
     if (writing) { dirty = true; return; }
     writing = true;
     try {
-      await cloud.db.doc('ranks/' + cloud.uid).set({ nick: nick, total: total, today: td, totalS: totalS, todayS: todayS, streak: stk, last: lastD, day: day });
-      synced = { total: total, today: td, totalS: totalS, todayS: todayS, stk: stk, day: day, nick: nick };
+      await cloud.db.doc('ranks/' + cloud.uid).set({ nick: nick, total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, yDay: yDay, streak: stk, last: lastD, day: day });
+      synced = { total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, stk: stk, day: day, nick: nick };
     } catch (e) {
       lastFail = Date.now();
+      console.error('랭킹 저장 실패:', e);
       if (e && e.code === 'invalid_argument') { cloud.canWrite = false; renderRank(); }
       else if (e && e.code === 'quota_exceeded') { toast('랭킹 저장 공간이 가득 차서 기록을 올리지 못했어요.'); }
     }
@@ -820,20 +837,22 @@
   function renderRank() {
     const list = $('leaderboard-list'), note = $('rank-note');
     const tk = dayKey();
-    const localMe = { total: Math.floor(totalSec), today: today.day === tk ? Math.floor(today.sec) : 0, streak: streak() };
+    const yk = yKey();
+    const localMe = { total: Math.floor(totalSec), today: today.day === tk ? Math.floor(today.sec) : 0, yest: yesterdaySec(), streak: streak() };
     let rows = [];
     if (cloud.state === 'ready') {
       rows = ranks.map(r => ({
         id: r.id, nick: String(r.nick || '이름없음').slice(0, 16),
         total: Number(r.totalS) || (Number(r.total) || 0) * 60,
         today: r.day === tk ? (Number(r.todayS) || (Number(r.today) || 0) * 60) : 0,
+        yest: r.yDay === yk ? (Number(r.yS) || 0) : (r.day === yk ? (Number(r.todayS) || (Number(r.today) || 0) * 60) : 0),
         streak: effStreak(r.streak, r.last)
       }));
       const mine = rows.find(r => r.id === cloud.uid);
-      if (mine) { mine.total = Math.max(mine.total, localMe.total); mine.today = Math.max(mine.today, localMe.today); mine.streak = Math.max(mine.streak, localMe.streak); }
-      else if (nick) rows.push({ id: cloud.uid, nick: nick, total: localMe.total, today: localMe.today, streak: localMe.streak });
+      if (mine) { mine.total = Math.max(mine.total, localMe.total); mine.today = Math.max(mine.today, localMe.today); mine.yest = Math.max(mine.yest, localMe.yest); mine.streak = Math.max(mine.streak, localMe.streak); }
+      else if (nick) rows.push({ id: cloud.uid, nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, streak: localMe.streak });
     } else if (nick) {
-      rows = [{ id: 'me', nick: nick, total: localMe.total, today: localMe.today, streak: localMe.streak }];
+      rows = [{ id: 'me', nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, streak: localMe.streak }];
     }
     const meId = cloud.uid || 'me';
     const key = rankTab;
@@ -1152,7 +1171,9 @@
     let total = 0, passed = 0;
     for (let t = RIVAL.start; t < end; t += 86400000) { total += rivalDaySec(seoulKey(new Date(t))); passed++; }
     total += todaySec;
-    return { id: 'rival', nick: RIVAL.name, total: total, today: todaySec, streak: passed + (todaySec >= 60 ? 1 : 0), virtual: true };
+    const yStart = dayStart - 86400000;
+    const yestSec = yStart >= RIVAL.start ? rivalDaySec(seoulKey(new Date(yStart))) : 0;
+    return { id: 'rival', nick: RIVAL.name, total: total, today: todaySec, yest: yestSec, streak: passed + (todaySec >= 60 ? 1 : 0), virtual: true };
   }
 
   function renderStreakRank(rows) {
@@ -1174,11 +1195,13 @@
   function setRankTab(t) {
     rankTab = t;
     $('rank-today').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'today' ? 'tab-on' : 'tab-off');
+    $('rank-yest').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'yest' ? 'tab-on' : 'tab-off');
     $('rank-total').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'total' ? 'tab-on' : 'tab-off');
     
     renderRank();
   }
   $('rank-today').addEventListener('click', () => setRankTab('today'));
+  $('rank-yest').addEventListener('click', () => setRankTab('yest'));
   $('rank-total').addEventListener('click', () => setRankTab('total'));
   
 
