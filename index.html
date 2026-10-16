@@ -120,22 +120,22 @@
 <div id="toast" role="status" class="hidden fixed left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg" style="bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));"></div>
 
 <header class="bg-white border-b border-slate-200 sticky z-40" style="top: env(safe-area-inset-top, 0px);">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
     <div class="flex items-center gap-3 min-w-0">
       <div class="bg-indigo-600 text-white w-10 h-10 rounded-xl shadow-md flex items-center justify-center text-xl shrink-0" aria-hidden="true">🎓</div>
       <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent truncate">나만의 학습 포털</h1>
     </div>
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto sm:shrink-0">
       
-      <div id="header-dday" class="hidden items-center gap-1.5 bg-violet-50 text-violet-600 px-3 py-1.5 rounded-full text-xs font-bold max-w-[11rem]">
+      <div id="header-dday" class="hidden items-center gap-1.5 bg-violet-50 text-violet-600 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold max-w-[11rem]">
         <span aria-hidden="true">📅</span><span id="hd-text" class="whitespace-nowrap"></span><span id="hd-title" class="hidden sm:inline truncate font-medium"></span>
       </div>
-      <button id="nick-badge" class="hidden items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-semibold max-w-[9rem]" title="닉네임 변경">
+      <button id="nick-badge" class="hidden items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold max-w-[9rem]" title="닉네임 변경">
         <span aria-hidden="true">👤</span><span id="display-nickname" class="truncate"></span>
       </button>
-      <button id="install-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap" title="홈 화면에 앱처럼 설치">📲 앱 설치</button>
-      <button id="signout-btn" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" title="Google 계정 로그아웃">로그아웃</button>
-      <button id="theme-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" aria-label="화면 테마 변경">🖥️ 자동</button>
+      <button id="install-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap" title="홈 화면에 앱처럼 설치"><span class="sm:hidden">📲 설치</span><span class="hidden sm:inline">📲 앱 설치</span></button>
+      <button id="signout-btn" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold transition" title="Google 계정 로그아웃">로그아웃</button>
+      <button id="theme-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold transition" aria-label="화면 테마 변경">🖥️ 자동</button>
     </div>
   </div>
 </header>
