@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>나만의 학습 포털 & 랭킹</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="튜브스터디">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <!-- Firebase: Google 로그인 + 공유 데이터베이스 -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -126,6 +133,7 @@
       <button id="nick-badge" class="hidden items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-semibold max-w-[9rem]" title="닉네임 변경">
         <span aria-hidden="true">👤</span><span id="display-nickname" class="truncate"></span>
       </button>
+      <button id="install-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap" title="홈 화면에 앱처럼 설치">📲 앱 설치</button>
       <button id="signout-btn" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" title="Google 계정 로그아웃">로그아웃</button>
       <button id="theme-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold transition" aria-label="화면 테마 변경">🖥️ 자동</button>
     </div>
@@ -1672,6 +1680,20 @@
   $('music-play').addEventListener('click', playMusic);
   musicInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') playMusic(); });
   $('music-stop').addEventListener('click', () => { $('music-frame').src = 'about:blank'; $('music-box').classList.add('hidden'); });
+
+  // ---------- 앱 설치 (PWA) ----------
+  if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); }); }
+  let installEvt = null;
+  const installBtn = $('install-btn');
+  const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (!isStandalone()) installBtn.classList.remove('hidden'); });
+  window.addEventListener('appinstalled', () => { installEvt = null; installBtn.classList.add('hidden'); toast('설치 완료! 이제 홈 화면에서 열 수 있어요 🎉'); });
+  if (isIOS && !isStandalone()) installBtn.classList.remove('hidden'); // 아이폰은 설치 창을 띄울 수 없어서 안내만 해요
+  installBtn.addEventListener('click', async () => {
+    if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; installBtn.classList.add('hidden'); return; }
+    if (isIOS) toast('사파리 아래쪽 공유 버튼(⬆️) → "홈 화면에 추가"를 눌러 주세요.');
+  });
 
   // ---------- 시작 ----------
   if (nick) showNick();
