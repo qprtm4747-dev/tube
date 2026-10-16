@@ -1650,6 +1650,8 @@
     let v = x.searchParams.get('v'), list = x.searchParams.get('list');
     if (host === 'youtu.be') v = x.pathname.slice(1);
     else if (host !== 'youtube.com') return null;
+    const pm = x.pathname.match(/^\/(?:live|shorts|embed|v)\/([\w-]{6,20})/); // 라이브·쇼츠 등 주소 형식도 지원
+    if (!v && pm) v = pm[1];
     if (v && !/^[\w-]{6,20}$/.test(v)) v = null;
     if (list && (!/^[\w-]{10,60}$/.test(list) || list.indexOf('RD') === 0)) list = null; // 자동 믹스 목록은 삽입 재생이 안 돼요
     if (!v && !list) return null;
