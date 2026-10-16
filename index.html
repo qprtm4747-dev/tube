@@ -520,6 +520,8 @@
   // ---------- 클라우드 (공유 랭킹) ----------
   const cloud = { db: null, uid: null, canWrite: true, state: 'loading' };
   let ranks = [];
+  let rankExpanded = false;
+  const RANK_PREVIEW = 3;
   let rankTab = 'today';
   let synced = { total: -1, today: -1, totalS: -1, todayS: -1, yS: -1, day: '', nick: '' };
   let writing = false, dirty = false, lastFail = 0, adopted = false;
@@ -873,7 +875,8 @@
 
     list.innerHTML = '';
     if (rows.length === 0) { list.innerHTML = '<p class="text-center text-slate-400 py-4 text-sm">아직 참여한 사람이 없어요.</p>'; return; }
-    rows.forEach((r, i) => {
+    const shownRows = rankExpanded ? rows : rows.slice(0, RANK_PREVIEW);
+    shownRows.forEach((r, i) => {
       const isMe = r.id === meId;
       const div = document.createElement('div');
       div.className = `flex items-center justify-between p-3 rounded-xl border ${isMe ? 'bg-indigo-50/70 border-indigo-200 font-bold text-indigo-900' : 'bg-white border-slate-100 text-slate-700'} text-sm`;
@@ -886,6 +889,14 @@
         <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-full text-slate-600 font-semibold whitespace-nowrap">${fmtSec(r[key])}</span>`;
       list.appendChild(div);
     });
+    if (rows.length > RANK_PREVIEW) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'w-full py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 transition';
+      more.textContent = rankExpanded ? '접기 ▲' : `더보기 (${rows.length - RANK_PREVIEW}명) ▼`;
+      more.addEventListener('click', () => { rankExpanded = !rankExpanded; renderRank(); });
+      list.appendChild(more);
+    }
   }
 
   // ---------- 과목별 통계 ----------
