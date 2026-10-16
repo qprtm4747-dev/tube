@@ -264,11 +264,21 @@
         <p id="pending-hint" class="text-xs text-slate-400 mt-2"></p>
       </div>
 
-      <div class="mb-5 text-left">
-        <div class="flex justify-between text-xs text-slate-500 mb-1">
-          <span>오늘 목표</span><span id="goal-text">0 / 120분</span>
+      <div id="goal-card" class="mb-5 flex items-center gap-4 text-left p-3 rounded-2xl border border-indigo-100" style="background:linear-gradient(135deg,#eef2ff,#f5f3ff);">
+        <div class="relative shrink-0" style="width:64px;height:64px;">
+          <svg viewBox="0 0 64 64" width="64" height="64" style="transform:rotate(-90deg);" aria-hidden="true">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#e0e7ff" stroke-width="7"></circle>
+            <circle id="goal-ring" cx="32" cy="32" r="26" fill="none" stroke="#6366f1" stroke-width="7" stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="163.36" style="transition:stroke-dashoffset .6s ease,stroke .4s;"></circle>
+          </svg>
+          <div id="goal-pct" class="absolute inset-0 flex items-center justify-center text-xs font-black text-indigo-700">0%</div>
         </div>
-        <div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div id="goal-bar" class="h-full bg-indigo-600 rounded-full transition-all" style="width:0%"></div></div>
+        <div class="min-w-0 flex-1">
+          <div class="flex justify-between items-center text-xs text-slate-500">
+            <span class="font-bold">🎯 오늘 목표</span><span id="goal-text">0 / 120분</span>
+          </div>
+          <p id="goal-msg" class="text-sm font-bold text-slate-800 mt-0.5"></p>
+          <p id="goal-streak" class="text-[11px] text-slate-400 mt-0.5"></p>
+        </div>
       </div>
 
       <div class="grid grid-cols-3 gap-2 text-left text-xs text-slate-500">
@@ -294,6 +304,7 @@
         <div class="flex gap-1.5">
           <button id="rank-today" class="px-3 py-1 rounded-full text-xs font-semibold tab-on transition">오늘</button>
           <button id="rank-yest" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">어제</button>
+          <button id="rank-week" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">이번주</button>
           <button id="rank-total" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">누적</button>
           
         </div>
@@ -309,6 +320,22 @@
     </div>
 
     <!-- 쉬는 시간 미니게임 -->
+    <!-- 음악 재생기 -->
+    <div class="order-9 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2"><span aria-hidden="true">🎵</span> 공부 음악</h2>
+      <p class="text-xs text-slate-400 mb-3">유튜브·유튜브 뮤직의 영상/재생목록 링크를 붙여넣으면 여기서 바로 재생돼요.</p>
+      <div class="flex gap-2">
+        <input id="music-url" type="url" placeholder="https://music.youtube.com/playlist?list=..." aria-label="유튜브 링크" class="flex-grow min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-sm">
+        <button id="music-play" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap">▶ 재생</button>
+      </div>
+      <p id="music-msg" class="hidden text-xs text-rose-500 mt-2"></p>
+      <div id="music-box" class="hidden mt-3">
+        <iframe id="music-frame" title="공부 음악 재생기" width="100%" height="200" style="border:0;border-radius:12px;" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <button id="music-stop" class="mt-2 text-xs text-slate-500 hover:text-slate-700 font-semibold">⏹ 닫기</button>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">일부 곡은 삽입 재생이 막혀 있을 수 있어요. 그땐 다른 링크를 시도해 주세요.</p>
+    </div>
+
     <details id="game-card" class="order-9 lg:order-none bg-white rounded-2xl border border-slate-200 shadow-sm">
       <summary class="cursor-pointer select-none p-4 text-sm font-bold text-slate-800 flex items-center justify-between"><span>🎮 쉬는 시간 미니게임</span><span class="game-open text-xs font-medium text-slate-400">펼치기 ▾</span><span class="game-close hidden text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">✕ 닫기</span></summary>
       <div class="px-4 pb-4">
@@ -369,6 +396,18 @@
   <p>열심히 공부하는 당신을 응원합니다! ✨</p>
 </footer>
 
+<!-- 휴식 종료 안내 팝업 -->
+<div id="rest-end-popup" style="position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:1rem;padding:1.5rem;max-width:20rem;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);">
+    <div style="font-size:2.2rem;line-height:1;">🔔</div>
+    <p style="font-weight:800;font-size:1.1rem;color:#1e293b;margin:.75rem 0 .25rem;">휴식이 끝났어요!</p>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:1.1rem;">이제 공부 타이머로 돌아갈 시간이에요 📚</p>
+    <div style="display:flex;gap:.5rem;">
+      <button id="rest-end-start" style="flex:1;background:#4f46e5;color:#fff;font-weight:700;font-size:.85rem;padding:.6rem;border-radius:.75rem;">집중 시작</button>
+      <button id="rest-end-close" style="flex:1;background:#f1f5f9;color:#475569;font-weight:700;font-size:.85rem;padding:.6rem;border-radius:.75rem;">닫기</button>
+    </div>
+  </div>
+</div>
 <!-- 미니게임 휴식 타이머 안내 팝업 -->
 <div id="rest-popup" class="hidden" style="position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:1rem;">
   <div style="background:#fff;border-radius:1rem;padding:1.5rem;max-width:20rem;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);">
@@ -476,6 +515,24 @@
   if (totalSec === null) totalSec = (Number(lsGet('study_total_time', 0)) || 0) * 60;
   totalSec = Number(totalSec) || 0;
   function yKey() { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); }
+  let dayLog = lsGet('study_daylog', null);
+  if (!dayLog || typeof dayLog !== 'object' || Array.isArray(dayLog)) dayLog = {};
+  function weekKey() { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dayKey(d); }
+  function weekSec() {
+    const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+    const tk = dayKey(); let sum = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(mon); d.setDate(mon.getDate() + i);
+      const k = dayKey(d); if (k > tk) break;
+      let v = Number(dayLog[k]) || 0;
+      const sl = subjectLog[k];
+      if (sl) v = Math.max(v, Object.keys(sl).reduce((a, n) => a + (Number(sl[n]) || 0), 0));
+      if (yest.day === k) v = Math.max(v, Number(yest.sec) || 0);
+      if (today.day === k) v = Math.max(v, Number(today.sec) || 0);
+      sum += v;
+    }
+    return Math.floor(sum);
+  }
   let yest = lsGet('study_yest', null);
   if (!yest || typeof yest !== 'object') yest = { day: '', sec: 0 };
   let today = lsGet('study_today', null);
@@ -506,6 +563,9 @@
   function addStudy(sec) {
     if (today.day !== dayKey()) rollToday();
     totalSec += sec; today.sec += sec;
+    dayLog[today.day] = (Number(dayLog[today.day]) || 0) + sec;
+    Object.keys(dayLog).sort().slice(0, -21).forEach(k => delete dayLog[k]);
+    lsSet('study_daylog', dayLog);
     if (today.sec >= 60 && !days.includes(today.day)) days.push(today.day);
   }
   function streak() {
@@ -523,7 +583,7 @@
   let rankExpanded = false;
   const RANK_PREVIEW = 3;
   let rankTab = 'today';
-  let synced = { total: -1, today: -1, totalS: -1, todayS: -1, yS: -1, day: '', nick: '' };
+  let synced = { total: -1, today: -1, totalS: -1, todayS: -1, yS: -1, wS: -1, day: '', nick: '' };
   let writing = false, dirty = false, lastFail = 0, adopted = false;
 
   async function syncRank(force) {
@@ -532,14 +592,14 @@
     const total = totalMin(), td = todayMin(), day = dayKey();
     const totalS = Math.floor(totalSec), todayS = today.day === day ? Math.floor(today.sec) : 0;
     const stk = streak(), lastD = days.length ? days.slice().sort().pop() : '';
-    const yS = yesterdaySec(), yDay = yKey();
-    if (!force && totalS === synced.totalS && todayS === synced.todayS && yS === synced.yS && stk === synced.stk && day === synced.day && nick === synced.nick) return;
+    const yS = yesterdaySec(), yDay = yKey(), wS = weekSec(), wKey = weekKey();
+    if (!force && totalS === synced.totalS && todayS === synced.todayS && yS === synced.yS && wS === synced.wS && stk === synced.stk && day === synced.day && nick === synced.nick) return;
     if (Date.now() - lastFail < 30000) return;
     if (writing) { dirty = true; return; }
     writing = true;
     try {
-      await cloud.db.doc('ranks/' + cloud.uid).set({ nick: nick, total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, yDay: yDay, streak: stk, last: lastD, day: day });
-      synced = { total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, stk: stk, day: day, nick: nick };
+      await cloud.db.doc('ranks/' + cloud.uid).set({ nick: nick, total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, yDay: yDay, wS: wS, wKey: wKey, streak: stk, last: lastD, day: day });
+      synced = { total: total, today: td, totalS: totalS, todayS: todayS, yS: yS, wS: wS, stk: stk, day: day, nick: nick };
     } catch (e) {
       lastFail = Date.now();
       console.error('랭킹 저장 실패:', e);
@@ -839,8 +899,8 @@
   function renderRank() {
     const list = $('leaderboard-list'), note = $('rank-note');
     const tk = dayKey();
-    const yk = yKey();
-    const localMe = { total: Math.floor(totalSec), today: today.day === tk ? Math.floor(today.sec) : 0, yest: yesterdaySec(), streak: streak() };
+    const yk = yKey(), wk = weekKey();
+    const localMe = { total: Math.floor(totalSec), today: today.day === tk ? Math.floor(today.sec) : 0, yest: yesterdaySec(), week: weekSec(), streak: streak() };
     let rows = [];
     if (cloud.state === 'ready') {
       rows = ranks.map(r => ({
@@ -848,13 +908,14 @@
         total: Number(r.totalS) || (Number(r.total) || 0) * 60,
         today: r.day === tk ? (Number(r.todayS) || (Number(r.today) || 0) * 60) : 0,
         yest: r.yDay === yk ? (Number(r.yS) || 0) : (r.day === yk ? (Number(r.todayS) || (Number(r.today) || 0) * 60) : 0),
+        week: r.wKey === wk ? (Number(r.wS) || 0) : 0,
         streak: effStreak(r.streak, r.last)
       }));
       const mine = rows.find(r => r.id === cloud.uid);
-      if (mine) { mine.total = Math.max(mine.total, localMe.total); mine.today = Math.max(mine.today, localMe.today); mine.yest = Math.max(mine.yest, localMe.yest); mine.streak = Math.max(mine.streak, localMe.streak); }
-      else if (nick) rows.push({ id: cloud.uid, nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, streak: localMe.streak });
+      if (mine) { mine.total = Math.max(mine.total, localMe.total); mine.today = Math.max(mine.today, localMe.today); mine.yest = Math.max(mine.yest, localMe.yest); mine.week = Math.max(mine.week, localMe.week); mine.streak = Math.max(mine.streak, localMe.streak); }
+      else if (nick) rows.push({ id: cloud.uid, nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, week: localMe.week, streak: localMe.streak });
     } else if (nick) {
-      rows = [{ id: 'me', nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, streak: localMe.streak }];
+      rows = [{ id: 'me', nick: nick, total: localMe.total, today: localMe.today, yest: localMe.yest, week: localMe.week, streak: localMe.streak }];
     }
     const meId = cloud.uid || 'me';
     const key = rankTab;
@@ -1184,7 +1245,10 @@
     total += todaySec;
     const yStart = dayStart - 86400000;
     const yestSec = yStart >= RIVAL.start ? rivalDaySec(seoulKey(new Date(yStart))) : 0;
-    return { id: 'rival', nick: RIVAL.name, total: total, today: todaySec, yest: yestSec, streak: passed + (todaySec >= 60 ? 1 : 0), virtual: true };
+    let weekS = todaySec;
+    const monStart = dayStart - ((new Date(dayStart).getUTCDay() + 6) % 7) * 86400000;
+    for (let t = Math.max(monStart, RIVAL.start); t < dayStart; t += 86400000) weekS += rivalDaySec(seoulKey(new Date(t)));
+    return { id: 'rival', nick: RIVAL.name, total: total, today: todaySec, yest: yestSec, week: weekS, streak: passed + (todaySec >= 60 ? 1 : 0), virtual: true };
   }
 
   function renderStreakRank(rows) {
@@ -1207,12 +1271,14 @@
     rankTab = t;
     $('rank-today').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'today' ? 'tab-on' : 'tab-off');
     $('rank-yest').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'yest' ? 'tab-on' : 'tab-off');
+    $('rank-week').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'week' ? 'tab-on' : 'tab-off');
     $('rank-total').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'total' ? 'tab-on' : 'tab-off');
     
     renderRank();
   }
   $('rank-today').addEventListener('click', () => setRankTab('today'));
   $('rank-yest').addEventListener('click', () => setRankTab('yest'));
+  $('rank-week').addEventListener('click', () => setRankTab('week'));
   $('rank-total').addEventListener('click', () => setRankTab('total'));
   
 
@@ -1426,6 +1492,14 @@
       });
     } catch (e) {}
   }
+  function showRestEnd() { $('rest-end-popup').style.display = 'flex'; }
+  function hideRestEnd() { $('rest-end-popup').style.display = 'none'; }
+  $('rest-end-close').addEventListener('click', hideRestEnd);
+  $('rest-end-start').addEventListener('click', () => {
+    hideRestEnd();
+    if (mode !== 'study') setMode('study');
+    if (!running) $('timer-toggle').click();
+  });
   function stopLoop() { clearInterval(timerId); timerId = null; running = false; }
   function tick() {
     const now = Date.now();
@@ -1453,6 +1527,7 @@
       if (gameWasOpen) gcard.open = false;
       toast(wasStudy ? '집중 시간이 끝났어요! 저장 버튼을 눌러 랭킹에 기록하세요.' : (gameWasOpen ? '휴식이 끝났어요! 미니게임을 종료했어요. 다시 힘내볼까요?' : '휴식이 끝났어요! 다시 힘내볼까요?'));
       setMode(wasStudy ? 'break' : 'study');
+      if (!wasStudy) showRestEnd();
       return;
     }
     renderTimer();
@@ -1507,10 +1582,55 @@
   $('set-sound').addEventListener('change', onSettings);
 
   // ---------- 통계 ----------
+  let goalDays = lsGet('study_goal_days', []);
+  if (!Array.isArray(goalDays)) goalDays = [];
+  let halfDay = lsGet('study_goal_half', '');
+  function goalStreak() {
+    const set = new Set(goalDays); const d = new Date();
+    if (!set.has(dayKey(d))) d.setDate(d.getDate() - 1);
+    let n = 0; while (set.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+  function celebrate() {
+    beep();
+    const em = ['🎉', '✨', '⭐', '🎊', '💜'];
+    for (let i = 0; i < 40; i++) {
+      const e = document.createElement('span');
+      e.textContent = em[i % em.length];
+      e.style.cssText = 'position:fixed;top:-30px;left:' + (Math.random() * 100) + 'vw;font-size:' + (16 + Math.random() * 18) + 'px;z-index:120;pointer-events:none;';
+      document.body.appendChild(e);
+      const dur = 1600 + Math.random() * 1600;
+      if (e.animate) e.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: 'translateY(' + (window.innerHeight + 60) + 'px) rotate(' + (Math.random() * 720 - 360) + 'deg)', opacity: .9 }], { duration: dur, delay: Math.random() * 500, easing: 'ease-in', fill: 'forwards' });
+      setTimeout(() => e.remove(), dur + 700);
+    }
+  }
   function updateGoal() {
-    const min = today.sec / 60;
-    $('goal-text').textContent = `${Math.floor(min)} / ${settings.goal}분`;
-    $('goal-bar').style.width = Math.min(100, (min / settings.goal) * 100) + '%';
+    const goal = Math.max(1, settings.goal);
+    const sec = (today.day === dayKey() ? today.sec : 0) + (typeof pendingSec === 'number' ? pendingSec : 0);
+    const min = sec / 60, ratio = min / goal, pct = Math.min(100, Math.floor(ratio * 100));
+    $('goal-text').textContent = `${Math.floor(min)} / ${goal}분`;
+    $('goal-pct').textContent = pct + '%';
+    const ring = $('goal-ring');
+    ring.style.strokeDashoffset = String(163.36 * (1 - Math.min(1, ratio)));
+    ring.style.stroke = ratio >= 1 ? '#10b981' : '#6366f1';
+    const left = Math.max(0, Math.ceil(goal - min));
+    let msg;
+    if (ratio >= 1) msg = `목표 달성! 🎉 +${Math.floor(min - goal)}분 초과`;
+    else if (ratio >= .75) msg = `거의 다 왔어요! ${left}분 남았어요 🔥`;
+    else if (ratio >= .5) msg = `절반 넘었어요! ${left}분 남았어요 💪`;
+    else if (ratio >= .25) msg = `좋은 흐름이에요, ${left}분 남았어요`;
+    else if (ratio > 0) msg = `시동이 걸렸어요! ${left}분 남았어요`;
+    else msg = '오늘의 첫 걸음을 떼볼까요?';
+    $('goal-msg').textContent = msg;
+    const n = goalStreak();
+    $('goal-streak').textContent = n > 0 ? `🔥 목표 ${n}일 연속 달성 중` : '오늘 달성하면 연속 달성이 시작돼요';
+    const tk = dayKey();
+    if (ratio >= .5 && ratio < 1 && halfDay !== tk && sec > 0) { halfDay = tk; lsSet('study_goal_half', tk); toast('목표의 절반을 넘었어요! 💪'); }
+    if (ratio >= 1 && !goalDays.includes(tk)) {
+      goalDays.push(tk); lsSet('study_goal_days', goalDays.slice(-60));
+      $('goal-streak').textContent = `🔥 목표 ${goalStreak()}일 연속 달성 중`;
+      celebrate(); toast('🎉 오늘의 목표를 달성했어요! 정말 대단해요!');
+    }
   }
   function updateStats() {
     const done = todos.filter(t => t.completed).length;
@@ -1521,6 +1641,35 @@
     renderSubjectStats();
     updateGoal();
   }
+
+
+  // ---------- 음악 재생기 ----------
+  function parseYT(u) {
+    let x; try { x = new URL(String(u).trim()); } catch (e) { return null; }
+    const host = x.hostname.replace(/^(www|m|music)\./, '');
+    let v = x.searchParams.get('v'), list = x.searchParams.get('list');
+    if (host === 'youtu.be') v = x.pathname.slice(1);
+    else if (host !== 'youtube.com') return null;
+    if (v && !/^[\w-]{6,20}$/.test(v)) v = null;
+    if (list && (!/^[\w-]{10,60}$/.test(list) || list.indexOf('RD') === 0)) list = null; // 자동 믹스 목록은 삽입 재생이 안 돼요
+    if (!v && !list) return null;
+    const q = 'autoplay=1&rel=0&playsinline=1';
+    if (v && list) return 'https://www.youtube.com/embed/' + v + '?list=' + list + '&' + q;
+    if (list) return 'https://www.youtube.com/embed/videoseries?list=' + list + '&' + q;
+    return 'https://www.youtube.com/embed/' + v + '?' + q;
+  }
+  const musicInput = $('music-url');
+  musicInput.value = lsGet('study_music', '') || '';
+  function playMusic() {
+    const raw = musicInput.value.trim(), src = parseYT(raw), msg = $('music-msg');
+    if (!src) { msg.textContent = '재생할 수 없는 링크예요. 영상이나 재생목록 링크를 붙여넣어 주세요. (자동 믹스 목록은 제외)'; msg.classList.remove('hidden'); return; }
+    msg.classList.add('hidden');
+    lsSet('study_music', raw);
+    $('music-frame').src = src; $('music-box').classList.remove('hidden');
+  }
+  $('music-play').addEventListener('click', playMusic);
+  musicInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') playMusic(); });
+  $('music-stop').addEventListener('click', () => { $('music-frame').src = 'about:blank'; $('music-box').classList.add('hidden'); });
 
   // ---------- 시작 ----------
   if (nick) showNick();
