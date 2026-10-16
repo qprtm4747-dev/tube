@@ -333,7 +333,7 @@
       <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2"><span aria-hidden="true">🎵</span> 공부 음악</h2>
       <p class="text-xs text-slate-400 mb-3">유튜브·유튜브 뮤직의 영상/재생목록 링크를 붙여넣으면 여기서 바로 재생돼요.</p>
       <div class="flex gap-2">
-        <input id="music-url" type="url" placeholder="https://music.youtube.com/playlist?list=..." aria-label="유튜브 링크" class="flex-grow min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-sm">
+        <input id="music-url" type="url" placeholder="https://www.youtube.com/live/hS8EWCngsFs?si=6EyzAKcMRyivRsG3" aria-label="유튜브 링크" class="flex-grow min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-sm">
         <button id="music-play" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap">▶ 재생</button>
       </div>
       <p id="music-msg" class="hidden text-xs text-rose-500 mt-2"></p>
@@ -1669,7 +1669,7 @@
     return 'https://www.youtube.com/embed/' + v + '?' + q;
   }
   const musicInput = $('music-url');
-  musicInput.value = lsGet('study_music', '') || '';
+  musicInput.value = lsGet('study_music', '') || 'https://www.youtube.com/live/hS8EWCngsFs?si=6EyzAKcMRyivRsG3'; // 저장된 링크가 없으면 예시 링크가 들어가요
   function playMusic() {
     const raw = musicInput.value.trim(), src = parseYT(raw), msg = $('music-msg');
     if (!src) { msg.textContent = '재생할 수 없는 링크예요. 영상이나 재생목록 링크를 붙여넣어 주세요. (자동 믹스 목록은 제외)'; msg.classList.remove('hidden'); return; }
