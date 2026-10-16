@@ -299,13 +299,13 @@
 
     <!-- 랭킹 -->
     <div class="order-4 lg:order-none bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <div class="flex items-center justify-between mb-3 gap-2">
-        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span aria-hidden="true">🏆</span> 스터디 랭킹</h2>
-        <div class="flex gap-1.5">
-          <button id="rank-today" class="px-3 py-1 rounded-full text-xs font-semibold tab-on transition">오늘</button>
-          <button id="rank-yest" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">어제</button>
-          <button id="rank-week" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">이번주</button>
-          <button id="rank-total" class="px-3 py-1 rounded-full text-xs font-semibold tab-off transition">누적</button>
+      <div class="flex flex-wrap items-center justify-between mb-3 gap-x-3 gap-y-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 whitespace-nowrap"><span aria-hidden="true">🏆</span> 스터디 랭킹</h2>
+        <div class="flex gap-1.5 shrink-0">
+          <button id="rank-today" class="whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold tab-on transition">오늘</button>
+          <button id="rank-yest" class="whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold tab-off transition">어제</button>
+          <button id="rank-week" class="whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold tab-off transition">이번주</button>
+          <button id="rank-total" class="whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold tab-off transition">누적</button>
           
         </div>
       </div>
@@ -1269,10 +1269,10 @@
 
   function setRankTab(t) {
     rankTab = t;
-    $('rank-today').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'today' ? 'tab-on' : 'tab-off');
-    $('rank-yest').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'yest' ? 'tab-on' : 'tab-off');
-    $('rank-week').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'week' ? 'tab-on' : 'tab-off');
-    $('rank-total').className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'total' ? 'tab-on' : 'tab-off');
+    $('rank-today').className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'today' ? 'tab-on' : 'tab-off');
+    $('rank-yest').className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'yest' ? 'tab-on' : 'tab-off');
+    $('rank-week').className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'week' ? 'tab-on' : 'tab-off');
+    $('rank-total').className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (t === 'total' ? 'tab-on' : 'tab-off');
     
     renderRank();
   }
@@ -1692,10 +1692,10 @@
       $('g-react').classList.toggle('hidden', which !== 'react');
       $('g-num').classList.toggle('hidden', which !== 'num');
       $('g-mine').classList.toggle('hidden', which !== 'mine' && which !== 'mine2');
-      tabR.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'react' ? 'tab-on' : 'tab-off');
-      tabN.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'num' ? 'tab-on' : 'tab-off');
-      tabM.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine' ? 'tab-on' : 'tab-off');
-      tabM2.className = 'px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine2' ? 'tab-on' : 'tab-off');
+      tabR.className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'react' ? 'tab-on' : 'tab-off');
+      tabN.className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'num' ? 'tab-on' : 'tab-off');
+      tabM.className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine' ? 'tab-on' : 'tab-off');
+      tabM2.className = 'whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition ' + (which === 'mine2' ? 'tab-on' : 'tab-off');
       if (which !== 'num') stopRun(); else if (!run) draw();
       curTab = which; renderGameRank();
       if (which === 'mine' || which === 'mine2') { if (which !== curMine) { setMineMode(which); mNew(); } else mResume(); } else mPause();
